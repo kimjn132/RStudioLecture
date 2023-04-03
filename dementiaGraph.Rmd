@@ -1,0 +1,1473 @@
+```{r}
+dementia1 <- read.csv('./Data/dementia_all.csv', header=T)
+dementia1
+```
+
+```{r}
+colnames(dementia1) <- c('Age', 'EDUC', 'SES', 'MMSE', 'CDR', 'Gender')
+```
+
+```{r}
+library(dplyr)
+```
+
+# 나이 구간별 히스토그램
+
+```{r}
+hist(dementia1$Age)
+```
+
+```{r}
+str(dementia1)
+```
+
+## 나이 구간별 정제
+
+```{r}
+sum(dementia1$Age>=60 & dementia1$Age<=68)#52
+sum(dementia1$Age>=69 & dementia1$Age<=72)#53
+sum(dementia1$Age>=73&dementia1$Age<=75)#53
+sum(dementia1$Age>=76&dementia1$Age<=78)#47
+sum(dementia1$Age>=79&dementia1$Age<=81)#45
+sum(dementia1$Age>=82&dementia1$Age<=85)#50
+sum(dementia1$Age>=86&dementia1$Age<=100)#53
+```
+
+```{r}
+dementia2 <- transform(dementia1,
+AgeRange = ifelse(dementia1$Age>=60 & dementia1$Age<=68, '60~68',
+      ifelse(dementia1$Age>=69 & dementia1$Age<=72, '69~72',
+      ifelse(dementia1$Age>=73&dementia1$Age<=75, '73~75',
+      ifelse(dementia1$Age>=76&dementia1$Age<=78, '76~78',
+      ifelse(dementia1$Age>=79&dementia1$Age<=81, '79~81',
+      ifelse(dementia1$Age>=82&dementia1$Age<=85, '82~85','86~100'
+             ))))))
+)
+```
+
+```{r}
+dementia2 <- transform(dementia_all,
+AgeRange = 
+                  ifelse(dementia_all$Age>=30 & dementia_all$Age<=49, 1,
+                         ifelse(dementia_all$Age>=50 & dementia_all$Age<=59, 2,
+                                ifelse(dementia_all$Age>=60 & dementia_all$Age<=69, 3, 
+                                       ifelse(dementia_all$Age>=70 & dementia_all$Age<=79, 4, ifelse(dementia_all$Age>=80 & dementia_all$Age<=89, 5,6                                                                                             ))))))
+```
+
+```{r}
+dementia2
+```
+
+### 구간별 막대 차트 데이터셋 정제
+
+```{r}
+oneR <- subset(dementia2,dementia2$AgeRange==1)
+twoR <- subset(dementia2,dementia2$AgeRange==2)
+threeR <- subset(dementia2,dementia2$AgeRange==3)
+fourR <- subset(dementia2,dementia2$AgeRange==4)
+fiveR <- subset(dementia2,dementia2$AgeRange==5)
+sixR <- subset(dementia2,dementia2$AgeRange==6)
+
+```
+
+```{r}
+nrow(subset(oneR, oneR$CDR==0))
+nrow(subset(oneR, oneR$CDR==0.5))
+nrow(subset(oneR, oneR$CDR==1))
+```
+
+```{r}
+oneAR <- c(nrow(subset(oneR, oneR$CDR==0)), nrow(subset(oneR, oneR$CDR==0.5)), nrow(subset(oneR, oneR$CDR==1)))
+twoAR <- c(nrow(subset(twoR, oneR$CDR==0)), nrow(subset(twoR, twoR$CDR==0.5)), nrow(subset(twoR, twoR$CDR==1)))
+threeAR <- c(nrow(subset(threeR, threeR$CDR==0)), nrow(subset(threeR, threeR$CDR==0.5)), nrow(subset(threeR, threeR$CDR==1)))
+fourAR <- c(nrow(subset(fourR, fourR$CDR==0)), nrow(subset(fourR, fourR$CDR==0.5)), nrow(subset(fourR, fourR$CDR==1)))
+fiveAR <- c(nrow(subset(fiveR, fiveR$CDR==0)), nrow(subset(fiveR, fiveR$CDR==0.5)), nrow(subset(fiveR, fiveR$CDR==1)))
+sixAR <- c(nrow(subset(sixR, sixR$CDR==0)), nrow(subset(sixR, sixR$CDR==0.5)), nrow(subset(sixR, sixR$CDR==1)))
+
+```
+
+```{r}
+abc <- data.frame(삼사십 = oneAR, 오십대 = twoAR, 육십대 = threeAR, 칠십대 = fourAR, 팔십대 = fiveAR, 구십대 = sixAR)
+```
+
+```{r}
+abc
+```
+
+```{r}
+rownames(abc) <- c('정상', '경도', '확정')
+```
+
+```{r}
+colnames(abc) <- c('30~49', '50~59', '60~69', '70~79', '80~89', '90~100')
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(abc),
+        
+        ylim = c(0,300),
+        xlab = 'Age Range',
+        ylab = '인원수(명)',
+        main = '연령별(구간 맞춤) 치매 분포수',
+        col = c('orange', 'blue', 'red'),
+        
+        cex.axis = 0.8,
+        cex.names = 0.8,
+        legend.text = T
+        )
+```
+
+```{r}
+plot(dementia2$Age)
+```
+
+```{r}
+hist(dementia2$AgeRange)
+```
+
+```{r}
+dementia1$CDR
+```
+
+```{r}
+hist(dementia1$EDUC)
+```
+
+```{r}
+arrange(dementia1,desc(dementia1$EDUC))
+```
+
+## EDUC 구간 막대 그래프
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+sort(dementia1$EDUC)
+```
+
+```{r}
+sum(dementia1$EDUC>=6 & dementia1$EDUC<=11)
+sum(dementia1$EDUC==12)
+sum(dementia1$EDUC==13)
+sum(dementia1$EDUC==14)
+sum(dementia1$EDUC==15)
+sum(dementia1$EDUC==16)
+sum(dementia1$EDUC==17)
+sum(dementia1$EDUC==18)
+sum(dementia1$EDUC>=20&dementia1$EDUC<=23)
+
+#19, 21, 22, 24, 25, 26, 27, 28, 30는 없음
+```
+
+> 도저히 그릴 수가 없다..ㅎ
+
+```{r}
+dementia1$CDR <- as.numeric(dementia1$CDR)
+```
+
+## 상관 계수
+
+```{r}
+library(corrplot)
+```
+
+```{r}
+cor_dementia <- cor(dementia1)
+cor_dementia
+```
+
+```{r}
+cor(dementia1$CDR, dementia1$Age)
+cor(dementia1$CDR, dementia1$EDUC)
+cor(dementia1$CDR, dementia1$SES)
+cor(dementia1$CDR, dementia1$MMSE)
+cor(dementia1$CDR, dementia1$Gender)
+```
+
+```{r}
+plot(dementia1$CDR, dementia1$MMSE)
+```
+
+```{r}
+cor.test(dementia1$CDR, dementia1$Age)
+cor.test(dementia1$CDR, dementia1$EDUC)
+cor.test(dementia1$CDR, dementia1$SES)
+cor.test(dementia1$CDR, dementia1$MMSE)
+cor.test(dementia1$CDR, dementia1$Gender)
+```
+
+```{r}
+corrplot(cor_dementia)
+```
+
+### MMSE 상관계수
+
+```{r}
+plot(dementia1$MMSE ~ dementia1$CDR)
+r <- lm(dementia1$MMSE ~ dementia1$CDR)
+abline(r, col = 'red')
+```
+
+```{r}
+summary(r)
+```
+
+### Age
+
+```{r}
+plot(dementia1$Age ~ dementia1$CDR)
+r1 <- lm(dementia1$Age ~ dementia1$CDR)
+abline(r, col = 'red')
+```
+
+```{r}
+summary(r1)
+```
+
+## 다중 회기 분석
+
+```{r}
+plot(dementia1)
+```
+
+```{r}
+model <- lm(CDR~ ., data=dementia1)
+model
+```
+
+```{r}
+summary(model)
+```
+
+### 예측력 향상
+
+```{r}
+reduced <- step(model, direction = 'backward')
+```
+
+```{r}
+summary(reduced)
+```
+
+```{r}
+#dementia2$AgeRange <- factor(dementia2$AgeRange)
+```
+
+```{r}
+dementia2$CDR <- factor(dementia2$CDR)
+str(dementia2)
+```
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(dementia2$CDR, p=0.7, list = F)
+data.train <- dementia2[samp,]
+data.test <- dementia2[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ EDUC+SES+MMSE+Gender+Age, data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+ageRange: 66.66%\~72.38% (error: 25.42%)
+
+age: 70.47%\~71.42% (error 27.42%)
+
+\>\>둘이 비슷..
+
+```{r}
+dementia3 <- transform(dementia1,
+AgeRange = ifelse(dementia1$Age>=60 & dementia1$Age<=65, 1,
+      ifelse(dementia1$Age>=66 & dementia1$Age<=70, 2,
+      ifelse(dementia1$Age>=71&dementia1$Age<=75, 3,
+      ifelse(dementia1$Age>=76&dementia1$Age<=80, 4,
+      ifelse(dementia1$Age>=81&dementia1$Age<=85, 5,
+      ifelse(dementia1$Age>=86&dementia1$Age<=90, 6,
+      ifelse(dementia1$Age>=91&dementia1$Age<=95, 6, 7
+             )))))))
+)
+```
+
+```{r}
+dementia4 <- transform(dementia1,
+AgeRange = ifelse(dementia1$Age>=60 & dementia1$Age<=65, 1,
+      ifelse(dementia1$Age>=66 & dementia1$Age<=70, 2,
+      ifelse(dementia1$Age>=71&dementia1$Age<=75, 3,
+      ifelse(dementia1$Age>=76&dementia1$Age<=80, 4,
+      ifelse(dementia1$Age>=81&dementia1$Age<=85, 5,
+      ifelse(dementia1$Age>=86&dementia1$Age<=90, 6,
+      ifelse(dementia1$Age>=91&dementia1$Age<=95, 6, 7
+             )))))))
+)
+```
+
+```{r}
+dementia3
+```
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(dementia3$CDR, p=0.7, list = F)
+data.train <- dementia3[samp,]
+data.test <- dementia3[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ AgeRange, data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+```{r}
+str(dementia2)
+```
+
+```{r}
+dementia_non <- subset(dementia3, dementia3$CDR==0)
+dementia_mild <- subset(dementia3, dementia3$CDR==0.5)
+dementia_hard <- subset(dementia3, dementia3$CDR==1)
+```
+
+## 이상치 제거
+
+```{r}
+boxplot(dementia3$MMSE)
+boxplot(dementia3$SES)
+boxplot(dementia3$EDUC)
+```
+
+```{r}
+boxplot(dementia3$MMSE)$stats
+boxplot(dementia3$SES)$stats
+boxplot(dementia3$EDUC)$stats
+```
+
+```{r}
+dementia3$MMSE <- ifelse(dementia3$MMSE >30 | dementia3$MMSE < 23, NA, dementia3$MMSE)
+table(is.na(dementia3$MMSE))
+```
+
+```{r}
+dementia3 <- subset(dementia3, !is.na(dementia3$MMSE))
+```
+
+```{r}
+boxplot(dementia3$EDUC)$stats
+```
+
+```{r}
+#write.csv(dementia3, "./Data/dementia3.csv", row.names = F)
+```
+
+# 이상치 제거 머신 러닝
+
+```{r}
+dementia3$CDR <- factor(dementia3$CDR)
+```
+
+### RandomForest
+
+```{r}
+library(caret)
+samp <- createDataPartition(dementia3$CDR, p=0.7, list = F)
+data.train <- dementia3[samp,]
+data.test <- dementia3[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+```{r}
+boxplot(dementia3$eTIV)
+```
+
+# CDR 숫자 같게 비율 맞춰서 예측 구하기
+
+### randomForest
+
+```{r}
+hist(dementia1$CDR)
+```
+
+```{r}
+nrow(subset(dementia3, dementia3$CDR == 0))
+nrow(subset(dementia3, CDR == 1 & CDR == 0.5))
+#nrow(subset(dementia3, dementia3$CDR == 1))
+```
+
+> 숫자의 편차가 너무 크다.. 어쩌지? 우선 0 : 0.5+1 이렇게 맞추기
+
+```{r}
+dementia_non <- subset(dementia3, dementia3$CDR == 0)
+dementia_yes <- subset(dementia3, dementia3$CDR == 0.5)
+```
+
+```{r}
+dementia_yes <- rbind(dementia_yes, subset(dementia3, dementia3$CDR == 1))
+```
+
+```{r}
+nrow(dementia_yes)
+```
+
+```{r}
+rownames(dementia_non)
+rownames(dementia_yes)
+```
+
+```{r}
+nonRNames <- sort(sample(rownames(dementia_non), 108, replace = FALSE))
+```
+
+```{r}
+dementia_non[nonRNames,]
+dementia_yes
+```
+
+```{r}
+dementiaBoth <- rbind(dementia_non[nonRNames,], dementia_yes)
+```
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(dementiaBoth$CDR, p=0.7, list = F)
+data.train <- dementiaBoth[samp,]
+data.test <- dementiaBoth[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ EDUC+SES+MMSE+Gender+AgeRange, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+help("randomForest")
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> Age: 73.43%
+>
+> AgeRange: 78.12%
+
+### 막대 그래프
+
+```{r}
+nrow(subset(dementia3, dementia3$AgeRange==1))
+nrow(subset(dementia3, dementia3$AgeRange==2))
+nrow(subset(dementia3, dementia3$AgeRange==3))
+nrow(subset(dementia3, dementia3$AgeRange==4))
+nrow(subset(dementia3, dementia3$AgeRange==5))
+nrow(subset(dementia3, dementia3$AgeRange==6))
+nrow(subset(dementia3, dementia3$AgeRange==7))
+```
+
+```{r}
+subset(dementia3, AgeRange==1)
+```
+
+```{r}
+one <- subset(dementia3,dementia3$AgeRange==1)
+two <- subset(dementia3,dementia3$AgeRange==2)
+three <- subset(dementia3,dementia3$AgeRange==3)
+four <- subset(dementia3,dementia3$AgeRange==4)
+five <- subset(dementia3,dementia3$AgeRange==5)
+six <- subset(dementia3,dementia3$AgeRange==6)
+seven <- subset(dementia3,dementia3$AgeRange==7)
+```
+
+```{r}
+nrow(subset(one, one$CDR==0))
+nrow(subset(one, one$CDR==0.5))
+nrow(subset(one, one$CDR==1))
+```
+
+```{r}
+oneA <- c(nrow(subset(one, one$CDR==0)), nrow(subset(one, one$CDR==0.5)), nrow(subset(one, one$CDR==1)))
+twoA <- c(nrow(subset(two, two$CDR==0)), nrow(subset(two, two$CDR==0.5)), nrow(subset(two, two$CDR==1)))
+threeA <- c(nrow(subset(three, three$CDR==0)), nrow(subset(three, three$CDR==0.5)), nrow(subset(three, three$CDR==1)))
+fourA <- c(nrow(subset(four, four$CDR==0)), nrow(subset(four, four$CDR==0.5)), nrow(subset(four, four$CDR==1)))
+fiveA <- c(nrow(subset(five, five$CDR==0)), nrow(subset(five, five$CDR==0.5)), nrow(subset(five, five$CDR==1)))
+sixA <- c(nrow(subset(six, six$CDR==0)), nrow(subset(six, six$CDR==0.5)), nrow(subset(six, six$CDR==1)))
+sevenA <- c(nrow(subset(seven, seven$CDR==0)), nrow(subset(seven, seven$CDR==0.5)), nrow(subset(seven, seven$CDR==1)))
+```
+
+#matrix(데이터, row, column)
+
+```{r}
+ab <- data.frame(육십초 = oneA, 육십말 = twoA, 칠십초 = threeA, 칠십말 = fourA, 팔십초 = fiveA, 팔십말 = sixA, 구십백 = sevenA)
+```
+
+```{r}
+rownames(ab) <- c('정상', '경도', '확정')
+```
+
+```{r}
+colnames(ab) <- c('60-65', '66-70', '71-75', '76-80', '81-85', '86-90', '91-100')
+```
+
+```{r}
+ab
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(ab),
+        beside = T,
+        ylim = c(0,50),
+        xlab = 'Age Range',
+        ylab = '인원수(명)',
+        main = '연령별 치매 분포수',
+        col = c('orange', 'blue', 'red'),
+        legend.text = T
+        )
+```
+
+## 성별 치매 수(일반)
+
+```{r}
+female <- subset(dementia3,dementia3$Gender==0)
+male <- subset(dementia3,dementia3$Gender==1)
+```
+
+```{r}
+nrow(subset(female, female$CDR==0))
+nrow(subset(female, female$CDR==0.5))
+nrow(subset(female, female$CDR==1))
+```
+
+```{r}
+nrow(subset(male, male$CDR==0))
+nrow(subset(male, male$CDR==0.5))
+nrow(subset(male, male$CDR==1))
+```
+
+```{r}
+femaleG <- c(nrow(subset(female, female$CDR==0)), nrow(subset(female, female$CDR==0.5)), nrow(subset(female, female$CDR==1)))
+
+maleG <- c(nrow(subset(male, male$CDR==0)), nrow(subset(male, male$CDR==0.5)), nrow(subset(male, male$CDR==1)))
+```
+
+```{r}
+abb <- data.frame(femaleG, maleG)
+```
+
+```{r}
+rownames(abb) <- c('정상', '경도', '확정')
+```
+
+```{r}
+abb
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(abb),
+        beside = T,
+        ylim = c(0,160),
+        col = c('orange', 'blue', 'red'),
+        legend.text = T
+        )
+```
+
+## Trash
+
+```{r}
+femaleR <- subset(dementiaBoth,dementiaBoth$Gender==0)
+maleR <- subset(dementiaBoth,dementiaBoth$Gender==1)
+```
+
+```{r}
+femaleR
+maleR
+```
+
+```{r}
+nrow(subset(femaleR, femaleR$CDR==0))
+nrow(subset(femaleR, femaleR$CDR==0.5))
+nrow(subset(femaleR, femaleR$CDR==1))
+```
+
+## 성비 맞춤 CDR 그래프
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+nrow(subset(dementia3, dementia3$Gender==0))
+nrow(subset(dementia3, dementia3$Gender==1))
+```
+
+nrow(subset(dementia3, dementia3\$CDR == 0))
+
+nrow(subset(dementia3, CDR == 1 & CDR == 0.5))
+
+```{r}
+nrow(female)
+nrow(male)
+```
+
+rownames(dementia_non)
+
+rownames(dementia_yes)
+
+```{r}
+rownames(female)
+rownames(male)
+```
+
+```{r}
+nn <- sort(sample(rownames(female), 128, replace = FALSE))
+```
+
+nonRNames \<- sort(sample(rownames(dementia_non), 108, replace = FALSE))
+
+```{r}
+nrow(male)
+nrow(female[nn,])
+```
+
+```{r}
+female <- female[nn,]
+```
+
+```{r}
+genderR <- rbind(male, female[nn,])
+```
+
+```{r}
+nrow(subset(female, female$CDR==0))
+nrow(subset(female, female$CDR==0.5))
+nrow(subset(female, female$CDR==1))
+```
+
+```{r}
+nrow(subset(male, male$CDR==0))
+nrow(subset(male, male$CDR==0.5))
+nrow(subset(male, male$CDR==1))
+```
+
+```{r}
+femaleF <- c(98, 28, 3)
+maleF <- c(64, 59, 5)
+```
+
+```{r}
+aba <- data.frame(femaleF, maleF)
+aba
+```
+
+```{r}
+rownames(aba) <- c('정상', '경도', '확정')
+```
+
+```{r}
+aba
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(aba),
+        beside = T,
+        ylim = c(0,120),
+        col = c('orange', 'blue', 'red'),
+        main = '성별 치매 분포수',
+        ylab = '인원수(명)',
+        legend.text = T
+        )
+```
+
+### 성비 데이터로 randomforest
+
+```{r}
+genderR$CDR <- factor(genderR$CDR)
+```
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(genderR$CDR, p=0.7, list = F)
+data.train <- genderR[samp,]
+data.test <- genderR[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+Gender, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### 인공신경망
+
+```{r}
+samp <- c(sample(1:85, 60), sample(86:170, 60), sample(171:256, 60))
+samp
+```
+
+```{r}
+data.train <- genderR[samp, ]
+data.train
+```
+
+```{r}
+data.test <- genderR[-samp,]
+data.test
+```
+
+```{r}
+summary(data.train)
+summary(data.test)
+```
+
+```{r}
+library(nnet)
+```
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+EDUC+SES+MMSE+Gender, data = data.train, size=3)
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+```
+
+```{r}
+y <- data.test$CDR
+y
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+```
+
+```{r}
+table(pred, y)
+```
+
+```{r}
+model.nnet <- nnet(CDR~., data = genderR, size=3)
+```
+
+```{r}
+pred2 <- predict(rf, list(Age = 65,
+
+  EDUC = 20,
+
+  SES = 5,
+
+  MMSE = 29,
+  
+  Gender = 0,
+
+  ), type = 'class')
+
+pred2
+```
+
+Age+EDUC+SES+MMSE+Gender
+
+### 성비 데이터로 SVM
+
+```{r}
+library(e1071)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(genderR$CDR, p=0.7, list=F)
+data.train <- genderR[samp,]
+data.test <- genderR[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+```{r}
+model <- svm(CDR ~ ., data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+80%
+
+### 성비 의사결정나무
+
+```{r}
+library(party)
+library(caret)
+```
+
+```{r}
+samp <- createDataPartition(genderR$CDR, p=0.7, list = F)
+samp
+```
+
+```{r}
+data.train <- genderR[samp,]
+data.test <- genderR[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+```{r}
+dementiaG_tree <- ctree(CDR ~ Age+EDUC+SES+MMSE+Gender, data=data.train)
+```
+
+```{r}
+pred <- predict(dementiaG_tree, x,type='prob')
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+## 이상치 극단만 제거
+
+```{r}
+subset(dementia3, dementia3$MMSE >30 | dementia3$MMSE < 10)
+```
+
+```{r}
+dementia3$MMSE <- ifelse(dementia3$MMSE >30 | dementia3$MMSE < 10, NA, dementia3$MMSE)
+table(is.na(dementia3$MMSE))
+```
+
+```{r}
+dementia4 <- subset(dementia4, !is.na(dementia4$MMSE))
+```
+
+```{r}
+dementia4$CDR<-factor(dementia4$CDR)
+```
+
+```{r}
+write.csv(dementia4, "./Data/dementia4.csv", row.names = F)
+dementia4
+```
+
+## 이상치 극단 제거 머신 러닝
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(dementia4$CDR, p=0.7, list = F)
+data.train <- dementia4[samp,]
+data.test <- dementia4[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### 인공신경망
+
+```{r}
+samp <- c(sample(1:85, 60), sample(86:170, 60), sample(171:256, 60))
+samp
+```
+
+```{r}
+data.train <- genderR[samp, ]
+data.train
+```
+
+```{r}
+data.test <- genderR[-samp,]
+data.test
+```
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+Gender, data = data.train, size=3)
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+```
+
+```{r}
+y <- data.test$CDR
+head(y)
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+```
+
+```{r}
+table(pred, y)
+```
+
+### 
+
+### CDR 비율 맞춤 막대그래프
+
+```{r}
+dementia4
+```
+
+```{r}
+nrow(subset(dementia4, dementia2$CDR==0))
+nrow(subset(dementia4, dementia2$CDR==0.5))
+nrow(subset(dementia4, dementia2$CDR==1))
+```
+
+sort(sample(rownames(female), 128, replace = FALSE))
+
+```{r}
+cd0 <- sort(sample(rownames(subset(dementia4, dementia2$CDR==0)), 80, replace = FALSE))
+cd5 <- sort(sample(rownames(subset(dementia4, dementia2$CDR==0.5)), 60, replace = FALSE))
+#sort(sample(subset(dementia4, dementia2$CDR==0), 80, replace = FALSE))
+```
+
+```{r}
+dementia5 <- rbind(
+subset(dementia4, dementia2$CDR==0)[cd0,],
+subset(dementia4, dementia2$CDR==0.5)[cd5,],
+subset(dementia4, dementia2$CDR==1)
+)
+```
+
+```{r}
+#write.csv(dementia5, "./Data/dementia5.csv", row.names = F)
+```
+
+```{r}
+dementia5$CDR <- factor(dementia5$CDR)
+```
+
+## RandomForest
+
+### 기본
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(dementia5$CDR, p=0.7, list = F)
+data.train <- dementia5[samp,]
+data.test <- dementia5[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+MMSE+Gender, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+Age+MMSE+Gender : Error=\>36%, 예측=\>66.03%
+
+### +SES
+
+```{r}
+rf <- randomForest(CDR ~ Age+MMSE+Gender+SES, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본+SES : Error=\>36.8%, 예측=\>67.92%
+
+### 
+
+### +EDUC
+
+```{r}
+rf <- randomForest(CDR ~ Age+MMSE+Gender+EDUC, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본+EDUC : Error=\>35.2%, 예측=\>67.92%
+
+### +SES+EDUC
+
+```{r}
+rf <- randomForest(CDR ~ Age+MMSE+Gender+SES+EDUC, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본+SES+EDUC : Error=\>40.8%, 예측=\>73.58%
+
+## 의사결정나무
+
+```{r}
+library(party)
+library(caret)
+```
+
+```{r}
+samp <- createDataPartition(dementia5$CDR, p=0.7, list = F)
+data.train <- dementia5[samp,]
+data.test <- dementia5[-samp,]
+samp
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+### 기본
+
+```{r}
+dementia_tree <- ctree(CDR ~ Age+MMSE+Gender, data=data.train)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> > 기본 : 예측=\>77.35%
+
+### +SES
+
+```{r}
+dementia_tree <- ctree(CDR ~ Age+MMSE+Gender+SES, data=data.train)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+\>기본 +SES : 예측=\>77.35%
+
+### +EDUC
+
+```{r}
+dementia_tree <- ctree(CDR ~ Age+MMSE+Gender+SES, data=data.train)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본 +EDUC : 예측=\>77.35%
+
+### SES+EDUC
+
+```{r}
+dementia_tree <- ctree(CDR ~ Age+MMSE+Gender+SES+EDUC, data=data.train)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본+EDUC+SES: 예측=\>77.35%
+
+## SVM
+
+```{r}
+library(e1071)
+library(caret)
+```
+
+```{r}
+samp <- createDataPartition(dementia5$CDR, p=0.7, list=F)
+data.train <- dementia5[samp,]
+data.test <- dementia5[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+### 기본
+
+```{r}
+model <- svm(CDR ~ Age+MMSE+Gender, data = data.train)
+model
+```
+
+```{r}
+pred <- predict(model, x)
+pred
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본 : 예측=\>81.13%
+
+### +SES
+
+```{r}
+model <- svm(CDR ~ Age+MMSE+Gender+SES, data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> > 기본+SES : 예측=\>79.24%
+
+### +EDUC
+
+```{r}
+model <- svm(CDR ~ Age+MMSE+Gender+EDUC, data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> > 기본+EDUC : 예측=\>75.47%
+
+### +SES+EDUC
+
+```{r}
+model <- svm(CDR ~ Age+MMSE+Gender+SES+EDUC, data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 기본+SES+EDUC : 예측=\>79.24%
+
+## 인공신경망
+
+```{r}
+library(nnet)
+```
+
+```{r}
+samp <- c(sample(1:60, 42), sample(61:120, 42), sample(121:178, 42))
+samp
+```
+
+```{r}
+data.train <- dementia5[samp, ]
+data.train
+```
+
+```{r}
+data.test <- dementia5[-samp,]
+data.test
+```
+
+### 기본
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+Gender, data = data.train, size=10) # size: 은닉층 개수
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+y <- data.test$CDR
+head(y)
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+table(pred, y)
+```
+
+> 예측력 =\> 80.76%
+
+### 기본+SES
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+Gender+SES, data = data.train, size=10) # size: 은닉층 개수
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+y <- data.test$CDR
+head(y)
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+table(pred, y)
+```
+
+> 예측력 =\> 50%
+
+### +EDUC
+
+### 
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+Gender+EDUC, data = data.train, size=10) # size: 은닉층 개수
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+y <- data.test$CDR
+head(y)
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+table(pred, y)
+```
+
+> 예측력 =\> %
+
+### SES+EDUC
+
+### 
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+Gender+SES+EDUC, data = data.train, size=3) # size: 은닉층 개수
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+head(x)
+y <- data.test$CDR
+head(y)
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+table(pred, y)
+```
+
+> 예측력 =\> 53.84%

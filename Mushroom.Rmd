@@ -1,0 +1,178 @@
+# Mushroom
+
+UCI 사이트
+
+## RandomForest를 이용한 버섯 분류
+
+```{r}
+mr <- read.csv('./Data/mushroom.csv', header = F)
+head(mr)
+```
+
+8124종류의 버섯의 특징과 독의 유무를 정리해논 데이터셋
+
+V1 : 독의 유므, 독(p), 식용(e)
+
+V2 : 버섯의 머리 모양, b(벨 형태), c(원뿔), x(볼록), f(평평), k(혹)
+
+V4 : 버섯의 머리색, n(갈색), b(황갈색), c(연한갈색), g(회색)
+
+자세한 내용은 사이트 참조.
+
+```{r}
+str(mr)
+```
+
+머신러닝 사용을 위해선 숫자가 필요하고 chr를 일일이 숫자로 바꾸지 않기 위해선 factor로 변경 후 factor의 숫자를 획득
+
+```{r}
+for(i in 1:23){
+  mr[, i]=as.factor(mr[,i])
+}
+str(mr)
+```
+
+```{r}
+for(i in 2:23){
+  mr[, i]=as.numeric(mr[,i])
+}
+head(mr)
+```
+
+V1기준으로 p와 e를 정렬
+
+```{r}
+library(dplyr)
+mr <- arrange(mr, V1)
+head(mr)
+```
+
+```{r}
+tail(mr)
+```
+
+```{r}
+nrow(subset(mr, V1 == 'e'))/8124*100
+```
+
+```{r}
+nrow(subset(mr, V1 == 'p'))/8124*100
+```
+
+Sampling
+
+```{r}
+library(caret)
+```
+
+```{r}
+set.seed(1234)
+    samp <- createDataPartition(mr$V1, p=0.7, list = F)
+    data.train <- mr[samp,]
+    data.test <- mr[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select =- V1)
+y <- data.test$V1
+```
+
+```{r}
+rf <- randomForest(V1 ~ ., data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+str(mr)
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### 인공신경망
+
+```{r}
+str(mr)
+```
+
+```{r}
+library(nnet)
+```
+
+```{r}
+model.nnet <- nnet(V1 ~ ., data=data.train, size = 3)
+```
+
+문제
+
+```{r}
+x <- subset(data.test, select = -V1)
+head(x)
+```
+
+답안지
+
+```{r}
+y <- data.test$V1
+head(y)
+```
+
+검증테스트
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+head(pred)
+```
+
+예측력 확인
+
+```{r}
+mean(pred == y)*100
+```
+
+정오표
+
+```{r}
+table(pred, y)
+```
+
+### SVM
+
+```{r}
+model <- svm(V1 ~ ., data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+\*\* 카테고리를 숫자로 바꾸면 안됨
+
+예) 남여를 1,로 바꾸면 남+남=여(1+1=2) 이렇게 컴퓨터가 인식할 수 있다. 0, 1로 표현하면 ok
+
+0,1로 표현할 수 없는 거주지(강남구, 강동구, 서초구 등등...) \>\> one-hot encoding
+
+서울 경기 충청동
+
+1 0 0
+
+0 1 0
+
+0 0 1
+
+이렇게 바꿔주는게 one-hot encoding이다.
+
+이렇게 바꿔줘야 컴퓨터에 혼란이 없다.
+
+1,2,3..이런 숫자로 카테고리 시키면 컴퓨터에 혼란을 야기시킨다.

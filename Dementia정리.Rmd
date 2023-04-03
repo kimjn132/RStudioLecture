@@ -1,0 +1,117 @@
+# Dementia
+
+## 데이터 불러오기
+
+```{r}
+dementia <- read.csv('./Data/dementia4.csv', header=T)
+dementia
+```
+
+## 컬럼 중 eTIV, nWBV, ASF는 사용자가 입력하기 어려운 데이터이므로 제거함
+
+```{r}
+dementia12 <-dementia[, -c(6:8, 9:10)]
+```
+
+## Target Column
+
+```{r}
+library(dplyr)
+library(fpc)
+```
+
+```{r}
+dementia[-5]
+```
+
+```{r}
+training.data <- scale(dementia[-5])
+```
+
+```{r}
+training.data
+```
+
+```{r}
+dementia.kmeans <- kmeans(training.data, centers = 3, iter.max = 10000)
+dementia.kmeans$centers
+```
+
+```{r}
+dementia$cluster <- as.factor(dementia.kmeans$cluster)
+```
+
+```{r}
+library(ggplot2)
+dementia$cluster
+```
+
+```{r}
+qplot(Age, MMSE, colour = cluster, data = dementia)
+```
+
+```{r}
+str(dementia12[,-6])
+```
+
+```{r}
+cor(dementia12[,-c(5:6)])
+```
+
+```{r}
+dementia12$CDR <- factor(dementia12$CDR)
+```
+
+```{r}
+dementia12$CDR, dementia12$
+```
+
+```{r}
+result <- princomp(dementia12[,-c(5:6)], cor = T)
+summary(result)
+```
+
+```{r}
+biplot(result)
+```
+
+```{r}
+result$loadings
+```
+
+```{r}
+dementia12 <- dementia12[,-6]
+str(dementia12)
+```
+
+```{r}
+library(caret)
+library(lattice)
+inTrain <- createDataPartition(y = dementia12$CDR, p = 0.7, list = F)
+training <- dementia12[inTrain,]
+testing <- dementia12[-inTrain,]
+training
+testing
+```
+
+```{r}
+training.data <- scale(training[-5])
+summary(training.data)
+```
+
+```{r}
+dementia.kmeans <- kmeans(training.data, centers = 3, iter.max = 10000)
+dementia.kmeans$centers
+```
+
+```{r}
+training$cluster <- as.factor(dementia.kmeans$cluster)
+qplot(SES, MMSE, colour = cluster, data = training)
+```
+
+```{r}
+library(NbClust)
+nc <- NbClust(training.data, min.nc = 2, max.nc = 15, method = "kmeans")
+```
+
+## 

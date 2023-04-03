@@ -1,0 +1,697 @@
+# 데이터 합치기
+
+```{r}
+dementiaPlus <- read.csv('./Data/addData2.csv', header=T)
+dementiaPlus <- dementiaPlus[,-1]
+```
+
+```{r}
+dementiaPlus
+```
+
+```{r}
+dementia <- read.csv('./Data/dementia4.csv', header=T)
+dementia
+```
+
+## 데이터 컬럼 맞추기
+
+```{r}
+dementia <- dementia[,-c(6:8)]
+```
+
+## 추가 데이터 성별 hot - key로 변환
+
+```{r}
+dementiaPlus
+```
+
+```{r}
+dementiaPlus$SexCode[dementiaPlus$M.F == 'F'] <- 0
+dementiaPlus$SexCode[dementiaPlus$M.F == 'M'] <- 1
+```
+
+```{r}
+dementiaPlus <- dementiaPlus[,-1]
+```
+
+```{r}
+dementia <- dementia[,-7]
+```
+
+```{r}
+str(dementia)
+str(dementiaPlus)
+```
+
+```{r}
+dementia$SexCode<-as.numeric(dementia$SexCode)
+```
+
+```{r}
+dementiaPlus$CDR<-as.numeric(dementiaPlus$CDR)
+```
+
+```{r}
+colnames(dementia) <- colnames(dementiaPlus)
+```
+
+### 다 합치기
+
+> 데이터 불러오기
+
+```{r}
+dementia_pplus <- read.csv('./Data/oasis_cross-sectional.csv', header=T)
+```
+
+```{r}
+head(dementia_pplus)
+```
+
+```{r}
+dementia_pplus <- dementia_pplus[,-c(1,3,9:12)]
+```
+
+```{r}
+dementia_pplus$Educ
+```
+
+### 결측치 컬럼별 확인 및 제거
+
+```{r}
+colSums(is.na(dementia_pplus))
+```
+
+```{r}
+dementia_pplus <- na.omit(dementia_pplus)
+```
+
+> 결측치 제거 확인
+
+```{r}
+sum(is.na(dementia_pplus))
+```
+
+### 이외 빈칸 확인
+
+```{r}
+subset(dementia_pplus, dementia_pplus$M.F=='')
+subset(dementia_pplus, dementia_pplus$Age=='')
+subset(dementia_pplus, dementia_pplus$Educ=='')
+subset(dementia_pplus, dementia_pplus$SES=='')
+subset(dementia_pplus, dementia_pplus$MMSE=='')
+subset(dementia_pplus, dementia_pplus$CDR=='')
+```
+
+> 확인 해 본 결과 결측치 이외에 다른 빈칸 데이터는 없는 것으로 확인
+
+## 컬럼 이름과 데이터 타입 변경한 후 합칠 준비
+
+```{r}
+str(dementia)
+str(dementia_pplus)
+```
+
+> sexCode 컬럼 추가(one-hot)
+
+```{r}
+dementia_pplus$SexCode[dementia_pplus$M.F == 'F'] <- 0
+dementia_pplus$SexCode[dementia_pplus$M.F == 'M'] <- 1
+```
+
+```{r}
+dementia_pplus<-dementia_pplus[,-1]
+```
+
+```{r}
+dementia_pplus
+```
+
+# ttt
+
+```{r}
+write.csv(dementia_pplus, "./Data/dementiaNew.csv", row.names = F)
+```
+
+```{r}
+str(dementia)
+str(dementia_pplus)
+```
+
+### 컬럼 이름 맞춰서 합치기
+
+```{r}
+colnames(dementia) <- colnames(dementia_pplus)
+```
+
+```{r}
+dementia_all <- rbind(dementia, dementia_pplus)
+```
+
+```{r}
+str(dementia_all)
+```
+
+```{r}
+#write.csv(dementia_all, "./Data/dementiaAgeAll.csv", row.names = F)
+```
+
+## 이상치 확인
+
+```{r}
+boxplot(dementia_all$Age)
+boxplot(dementia_all$Educ)
+boxplot(dementia_all$SES)
+boxplot(dementia_all$MMSE)
+boxplot(dementia_all$CDR)
+```
+
+```{r}
+#AgeStat <- 
+  boxplot(dementia_all$Age, horizontal = TRUE)
+AgeStat
+```
+
+\>33, 39세 극단 이상치 / 그 외에는 특이치
+
+```{r}
+abnormalAge <- subset(dementia_all, dementia_all$Age<52)
+```
+
+> 이상치 데이터 확인
+
+```{r}
+library(dplyr)
+arrange(abnormalAge, Age)
+```
+
+### CDR 기준 정리
+
+```{r}
+arrange(dementia_all, dementia_all$CDR)
+```
+
+```{r}
+plot(dementia_all)
+```
+
+### 
+
+## CDR 기준으로 비율 확인
+
+```{r}
+paste(
+  nrow((subset(dementia_all, CDR == 0.0))),
+  nrow((subset(dementia_all, CDR == 0.5))),
+  nrow((subset(dementia_all, CDR == 1.0))),
+  nrow((subset(dementia_all, CDR == 0.0))) / nrow(dementia_all),
+  nrow((subset(dementia_all, CDR == 0.5))) / nrow(dementia_all),
+  nrow((subset(dementia_all, CDR == 1.0))) / nrow(dementia_all))
+```
+
+> 정상: 338명(59.40%), 경도 치매: 167명(29.34%), 치매: 62명(10.89%)
+
+### CDR 비율 파이차트
+
+```{r}
+normal <- round(nrow((subset(dementia_all, CDR == 0.0))) / nrow(dementia_all)*100, 2)
+seminormal <- round(nrow((subset(dementia_all, CDR == 0.5))) / nrow(dementia_all)*100, 2)
+abnormal <- round(nrow((subset(dementia_all, CDR == 1.0))) / nrow(dementia_all)*100, 2)
+```
+
+```{r}
+normal
+seminormal
+abnormal
+```
+
+```{r}
+prop <- data.frame(정상 = normal, 경도치매 = seminormal, 치매 = abnormal)
+```
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+paste(colnames(prop),"\n",c(prop[1,]), "%")
+```
+
+```{r}
+label = paste(colnames(prop),"\n",c(prop[1,]), "%")
+par(family='AppleGothic')
+pie3D(as.matrix(prop),
+      labels = label,
+      main = '전체 치매 데이터 CDR(치매 결과) 비율')
+```
+
+```{r}
+length(as.matrix(prop))
+```
+
+### CDR 막대 그래프
+
+```{r}
+num <- data.frame(정상 = nrow((subset(dementia_all, CDR == 0.0))), 경도치매 = nrow((subset(dementia_all, CDR == 0.5))), 치매 = nrow((subset(dementia_all, CDR == 1.0))))
+aa <- c(nrow((subset(dementia_all, CDR == 0.0))), nrow((subset(dementia_all, CDR == 0.5))), nrow((subset(dementia_all, CDR == 1.0))))
+num
+```
+
+```{r}
+par(family='AppleGothic')
+
+barplot(aa,
+        col = c('red', 'blue'),
+        main = '치매 CDR 수치 당 인원수',
+        ylim = c(0,500),
+        cex.axis = 0.9,
+        xlab = 'CDR',
+        ylab = '인원수(명)',
+        names = c("정상(0)", '경증 치매(0.5)', '치매(1)'),
+        
+)
+
+# smart한 방법 
+data <- c()
+line <- 0.7
+#text(line, data+20000, data)
+
+for (i in 1:ncol(num)) {
+  data <- num[,i]
+  text(line, data+30, data)
+  line = line+1.2
+}
+```
+
+# Feature column 분석
+
+```{r}
+unique(dementia_all$SexCode)
+```
+
+## CDR \<- [SexCode] (여성의 CDR, 남성의 CDR 확인)
+
+```{r}
+dementia_all$SexCode <- factor(dementia_all$SexCode)
+```
+
+```{r}
+maleCount <- nrow(subset(dementia_all, dementia_all$SexCode==1))
+femaleCount <- nrow(subset(dementia_all, dementia_all$SexCode==0))
+maleCount
+femaleCount
+```
+
+> CDR이 진단 결과이므로 Target column으로 결정 대신 각 결과의 개수는 1:1 비율로 맞추고 할 예정.
+>
+> 우선 성별은 차이가 있으므로 Feature로 가능
+
+### 여성 CDR 수 및 퍼센트 & 파이차트
+
+```{r}
+femalenormal <- nrow(subset(dementia_all, dementia_all$SexCode == 0 & dementia_all$CDR==0.0))
+femaleSemiNormal <-nrow(subset(dementia_all, dementia_all$SexCode == 0 & dementia_all$CDR==0.5))
+femaleAbnormal <- nrow(subset(dementia_all, dementia_all$SexCode == 0 & dementia_all$CDR==1.0))
+
+femaleNormalRatio <- round(femalenormal / sum(femalenormal+femaleSemiNormal+femaleAbnormal)*100, 2)
+femaleSemiRatio <- round(femaleSemiNormal / sum(femalenormal+femaleSemiNormal+femaleAbnormal)*100, 2)
+femaleAbRatio <- round(femaleAbnormal / sum(femalenormal+femaleSemiNormal+femaleAbnormal)*100, 2)
+femalenormal
+femaleSemiNormal
+femaleAbnormal
+
+femaleNormalRatio
+femaleSemiRatio
+femaleAbRatio
+```
+
+```{r}
+femaleRatio <- data.frame(정상 = femaleNormalRatio, 경증치매 = femaleSemiRatio, 치매 = femaleAbRatio)
+femaleRatio
+```
+
+```{r}
+labelFR <- paste(colnames(femaleRatio), "\n", femaleRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(femaleRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelFR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR 여성 비율'
+      )
+```
+
+### 남성 CDR 수 및 퍼센트 & 파이차트
+
+```{r}
+malenormal <- nrow(subset(dementia_all, dementia_all$SexCode == 1 & dementia_all$CDR==0.0))
+maleSemiNormal <-nrow(subset(dementia_all, dementia_all$SexCode == 1 & dementia_all$CDR==0.5))
+maleAbnormal <- nrow(subset(dementia_all, dementia_all$SexCode == 1 & dementia_all$CDR==1.0))
+
+maleNormalRatio <- round(malenormal / sum(malenormal+maleSemiNormal+maleAbnormal)*100, 2)
+maleSemiRatio <- round(maleSemiNormal / sum(malenormal+maleSemiNormal+maleAbnormal)*100, 2)
+maleAbRatio <- round(maleAbnormal / sum(malenormal+maleSemiNormal+maleAbnormal)*100, 2)
+malenormal
+maleSemiNormal
+maleAbnormal
+
+maleNormalRatio
+maleSemiRatio
+maleAbRatio
+
+```
+
+```{r}
+maleRatio <- data.frame(정상 = maleNormalRatio, 경증치매 = maleSemiRatio, 치매 = maleAbRatio)
+maleRatio
+```
+
+```{r}
+labelMR <- paste(colnames(maleRatio), "\n", maleRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(maleRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR 남성 비율'
+      )
+```
+
+## 성별 전체 비율
+
+```{r}
+maleSum <- sum(malenormal+maleSemiNormal+maleAbnormal)
+femaleSum <- sum(femalenormal+femaleSemiNormal+femaleAbnormal)
+tt <- data.frame(여성=femaleSum, 남성 = maleSum)
+tt
+```
+
+```{r}
+par(family='AppleGothic')
+
+barplot(c(femaleSum, maleSum),
+        col = c('red', 'blue'),
+        main = '성별 표본 인원수',
+        ylim = c(0,650),
+        cex.axis = 0.9,
+        xlab = '성별',
+        ylab = '인원수',
+        names = c("여성", '남성'),
+        
+)
+
+# smart한 방법 
+data <- c()
+line <- 0.7
+#text(line, data+20000, data)
+
+for (i in 1:ncol(tt)) {
+  data <- tt[,i]
+  text(line, data+25, data)
+  line = line+1.2
+}
+```
+
+## CDR \<- [SES] 연봉 차이
+
+```{r}
+unique(dementia_all$SES)
+```
+
+```{r}
+dementia_all$SES <- factor(dementia_all$SES)
+```
+
+```{r}
+oneCount <- nrow(subset(dementia_all, dementia_all$SES==1))
+twoCount <- nrow(subset(dementia_all, dementia_all$SES==2))
+threeCount <- nrow(subset(dementia_all, dementia_all$SES==3))
+fourCount <- nrow(subset(dementia_all, dementia_all$SES==4))
+fiveCount <- nrow(subset(dementia_all, dementia_all$SES==5))
+```
+
+```{r}
+oneCount
+twoCount
+threeCount
+fourCount
+fiveCount
+```
+
+> 어느 정도 차이가 있으므로 Feature column으로 사용 가능
+
+### SES 1
+
+```{r}
+onenormal <- nrow(subset(dementia_all, dementia_all$SES == 1 & dementia_all$CDR==0.0))
+oneSemiNormal <-nrow(subset(dementia_all, dementia_all$SES == 1 & dementia_all$CDR==0.5))
+oneAbnormal <- nrow(subset(dementia_all, dementia_all$SES == 1 & dementia_all$CDR==1.0))
+
+oneNormalRatio <- round(onenormal / sum(onenormal+oneSemiNormal+oneAbnormal)*100, 2)
+oneSemiRatio <- round(oneSemiNormal / sum(onenormal+oneSemiNormal+oneAbnormal)*100, 2)
+oneAbRatio <- round(oneAbnormal / sum(onenormal+oneSemiNormal+oneAbnormal)*100, 2)
+onenormal
+oneSemiNormal
+oneAbnormal
+
+oneNormalRatio
+oneSemiRatio
+oneAbRatio
+```
+
+```{r}
+oneRatio <- data.frame(정상 = oneNormalRatio, 경증치매 = oneSemiRatio, 치매 = oneAbRatio)
+oneRatio
+```
+
+```{r}
+labelMR <- paste(colnames(oneRatio), "\n", oneRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(oneRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR SES Level 1 비율'
+      )
+```
+
+### SES2
+
+```{r}
+twonormal <- nrow(subset(dementia_all, dementia_all$SES == 2 & dementia_all$CDR==0.0))
+twoSemiNormal <-nrow(subset(dementia_all, dementia_all$SES == 2 & dementia_all$CDR==0.5))
+twoAbnormal <- nrow(subset(dementia_all, dementia_all$SES == 2 & dementia_all$CDR==1.0))
+
+twoNormalRatio <- round(twonormal / sum(twonormal+twoSemiNormal+twoAbnormal)*100, 2)
+twoSemiRatio <- round(twoSemiNormal / sum(twonormal+twoSemiNormal+twoAbnormal)*100, 2)
+twoAbRatio <- round(twoAbnormal / sum(twonormal+twoSemiNormal+twoAbnormal)*100, 2)
+twonormal
+twoSemiNormal
+twoAbnormal
+
+twoNormalRatio
+twoSemiRatio
+twoAbRatio
+```
+
+```{r}
+twoRatio <- data.frame(정상 = twoNormalRatio, 경증치매 = twoSemiRatio, 치매 = twoAbRatio)
+twoRatio
+```
+
+```{r}
+labelMR <- paste(colnames(twoRatio), "\n", twoRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(twoRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR SES Level 2 비율'
+      )
+```
+
+### SES3
+
+```{r}
+threenormal <- nrow(subset(dementia_all, dementia_all$SES == 3 & dementia_all$CDR==0.0))
+threeSemiNormal <-nrow(subset(dementia_all, dementia_all$SES == 3 & dementia_all$CDR==0.5))
+threeAbnormal <- nrow(subset(dementia_all, dementia_all$SES == 3 & dementia_all$CDR==1.0))
+
+threeNormalRatio <- round(threenormal / sum(threenormal+threeSemiNormal+threeAbnormal)*100, 2)
+threeSemiRatio <- round(threeSemiNormal / sum(threenormal+threeSemiNormal+threeAbnormal)*100, 2)
+threeAbRatio <- round(threeAbnormal / sum(threenormal+threeSemiNormal+threeAbnormal)*100, 2)
+threenormal
+threeSemiNormal
+threeAbnormal
+
+threeNormalRatio
+threeSemiRatio
+threeAbRatio
+```
+
+```{r}
+threeRatio <- data.frame(정상 = threeNormalRatio, 경증치매 = threeSemiRatio, 치매 = threeAbRatio)
+threeRatio
+```
+
+```{r}
+labelMR <- paste(colnames(threeRatio), "\n", threeRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(threeRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR SES Level 3 비율'
+      )
+```
+
+### SES4
+
+```{r}
+fournormal <- nrow(subset(dementia_all, dementia_all$SES == 4 & dementia_all$CDR==0.0))
+fourSemiNormal <-nrow(subset(dementia_all, dementia_all$SES == 4 & dementia_all$CDR==0.5))
+fourAbnormal <- nrow(subset(dementia_all, dementia_all$SES == 4 & dementia_all$CDR==1.0))
+
+fourNormalRatio <- round(fournormal / sum(fournormal+fourSemiNormal+fourAbnormal)*100, 2)
+fourSemiRatio <- round(fourSemiNormal / sum(fournormal+fourSemiNormal+fourAbnormal)*100, 2)
+fourAbRatio <- round(fourAbnormal / sum(fournormal+fourSemiNormal+fourAbnormal)*100, 2)
+fournormal
+fourSemiNormal
+fourAbnormal
+
+fourNormalRatio
+fourSemiRatio
+fourAbRatio
+```
+
+```{r}
+fourRatio <- data.frame(정상 = fourNormalRatio, 경증치매 = fourSemiRatio, 치매 = fourAbRatio)
+fourRatio
+```
+
+```{r}
+labelMR <- paste(colnames(fourRatio), "\n", fourRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(fourRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR SES Level 4 비율'
+      )
+```
+
+### SES 5
+
+```{r}
+fivenormal <- nrow(subset(dementia_all, dementia_all$SES == 5 & dementia_all$CDR==0.0))
+fiveSemiNormal <-nrow(subset(dementia_all, dementia_all$SES == 5 & dementia_all$CDR==0.5))
+fiveAbnormal <- nrow(subset(dementia_all, dementia_all$SES == 5 & dementia_all$CDR==1.0))
+
+fiveNormalRatio <- round(fivenormal / sum(fivenormal+fiveSemiNormal+fiveAbnormal)*100, 2)
+fiveSemiRatio <- round(fiveSemiNormal / sum(fivenormal+fiveSemiNormal+fiveAbnormal)*100, 2)
+fiveAbRatio <- round(fiveAbnormal / sum(fivenormal+fiveSemiNormal+fiveAbnormal)*100, 2)
+fivenormal
+fiveSemiNormal
+fiveAbnormal
+
+fiveNormalRatio
+fiveSemiRatio
+fiveAbRatio
+```
+
+```{r}
+fiveRatio <- data.frame(정상 = fiveNormalRatio, 경증치매 = fiveSemiRatio, 치매 = fiveAbRatio)
+fiveRatio
+```
+
+```{r}
+labelMR <- paste(colnames(fiveRatio), "\n", fiveRatio[1,], "%")
+par(family='AppleGothic')
+pie3D(as.matrix(fiveRatio),
+      col = c('aquamarine1', 'orange', 'red'),
+      labels = labelMR,
+      labelcex = 0.9,
+      explode = 0.1,
+      main = 'CDR SES Level 5 비율'
+      )
+```
+
+### SES 전체 비율
+
+```{r}
+SESOneSum <- sum(onenormal+oneSemiNormal+oneAbnormal)
+SESTwoSum <- sum(twonormal+twoSemiNormal+twoAbnormal)
+SESThreeSum <- sum(threenormal+threeSemiNormal+threeAbnormal)
+SESFourSum <- sum(fournormal+fourSemiNormal+fourAbnormal)
+SESFiveSum <- sum(fivenormal+fiveSemiNormal+fiveAbnormal)
+tt1 <- data.frame(SES1=SESOneSum, SES2 = SESTwoSum, SES3 = SESThreeSum, SES4 = SESFourSum, SES5 = SESFiveSum)
+tt1
+```
+
+```{r}
+par(family='AppleGothic')
+
+barplot(as.matrix(tt1),
+        col = rainbow(1:5),
+        main = 'SES Level별 인원수',
+        ylim = c(0,300),
+        cex.axis = 0.9,
+        xlab = 'SES',
+        ylab = '인원수',
+        #names = c("", '남성'),
+        
+)
+
+# smart한 방법 
+data <- c()
+line <- 0.7
+#text(line, data+20000, data)
+
+for (i in 1:ncol(tt1)) {
+  data <- tt1[,i]
+  text(line, data+25, data)
+  line = line+1.2
+}
+```
+
+### SES1의 여성 경도 치매 정도 비율
+
+```{r}
+str(dementia_all)
+```
+
+```{r}
+femaleSES1 <- sum(nrow(subset(dementia_all, (SexCode==0) & (SES==1))))
+femaleSES1CRD5 <- sum(nrow(subset(dementia_all, (SexCode=='female') & (SES==1) & (CDR==0.5))))
+#cat('1등 객실의 여성 생존율은', round(femaleCount1stSurvived / femaleCount1st*100, 2), "%")
+cat('level 1 SES 여성의 경도 치매율',round(femaleSES1CRD5 / femaleSES1 * 100, 2), '%\n')
+```
+
+```{r}
+femaleSES1
+```
+
+```{r}
+gender <- c(0, 1)
+
+for(j in gender){
+  for(i in 1:5){
+  femaleSES1 <- nrow(subset(dementia_all, (SexCode==j) & (SES==i)))
+  femaleSES1CRD5 <- nrow(subset(dementia_all, (SexCode==j) & (SES==i) & (CDR==0.5)))
+  cat(i,'level SES ',ifelse(j==0,'여성','남성'), ' 경도 치매율',round(femaleSES1CRD5 / femaleSES1 * 100, 2), '%\n')
+  }
+  cat('==================================\n')
+}
+```
+
+> CDR \<- [SexCode, SES]
+
+```{r}
+dementia_all
+```

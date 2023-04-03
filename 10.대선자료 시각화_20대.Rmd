@@ -1,0 +1,469 @@
+# 대선자료 시각화
+
+### 🐵 자료 정제
+
+```{r}
+election <- read.csv("./Data/election_2022.csv")
+head(election)
+```
+
+```{r}
+tail(election)
+```
+
+```{r}
+str(election)
+```
+
+```{r}
+summary(election)
+```
+
+```{r}
+sum(is.na(election))
+```
+
+```{r}
+table(election$광역시도)
+```
+
+### 광역시도에 중복 데이터 있는지 확인
+
+```{r}
+length(unique(election$광역시도))
+length(unique(election$시군구))
+
+```
+
+### 필요한 칼럼 추가하기
+
+-electionSum이라는 컬럼 추가하기 (electionSum = 이재명 + 윤석열 + 심상정)
+
+```{r}
+
+election$electionSum <- apply(election[, 5:7], 1, sum)
+election
+```
+
+-electionSum의 투표수가 몇 퍼센트 -\>electionRatio 컬럼 추가
+
+```{r}
+election$electionRatio <- (election$electionSum/election$투표수)*100
+election
+```
+
+```{r}
+apply(election[, 8:9], 2, mean)
+```
+
+### electionRatio가 가장 높은 지역과 낮은 지역 구하기
+
+-방법1
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+arrange(election[,c(1:2,9)], desc(electionRatio))[1,]
+arrange(election[,c(1:2,9)], (electionRatio))[1,]
+
+```
+
+-방법2
+
+```{r}
+subset(election, electionRatio==max(election$electionRatio))
+subset(election, electionRatio==min(election$electionRatio))
+```
+
+csv로 저장하기 (election_2022_job.csv)
+
+```{r}
+write.csv(election, "./Data/election_2022_job.csv", row.names = F)
+```
+
+```{r}
+read.csv('./Data/election_2022_job.csv')
+```
+
+```{r}
+library(plotrix)
+```
+
+# 광역시도별 투표율
+
+### 광역시도별 선거인수와 투표수
+
+```{r}
+#y(독립변수)~x(종속변수)
+vv <- aggregate(투표수 ~ 광역시도, election, sum)
+vv
+```
+
+### 광역시도별 투표수 비율 구하기
+
+```{r}
+vv$ratio = round(vv$투표수/sum(vv$투표수)*100, digits = 2)
+vv
+```
+
+### 구한 비율을 내림차순으로 정렬
+
+```{r}
+
+vv_order<-arrange(vv[,c(1:3)], desc(ratio))
+vv_order
+```
+
+### (번외)수도권투표수는 전체 투표수의 몇퍼센트인가?
+
+```{r}
+vv_seoul <- vv_order[c(1,2,5), ]
+vv_seoul
+paste(round(sum(vv_seoul$투표수)/sum(vv_order$투표수)*100,2), '%')
+```
+
+## 3D Pie Chart 그리기
+
+```{r}
+library(plotrix)
+```
+
+### label만들기
+
+```{r}
+label <- paste(vv_order$광역시도, "\n", vv_order$ratio, '%')
+```
+
+### 3D Pie Chart
+
+```{r}
+par(family='AppleGothic')
+pie3D(vv_order$ratio,
+    main = '광역시도별 투표율',
+    col = rainbow(length(vv_order$ratio)),
+    labels = label,
+    #라벨 크기
+    labelcex = 0.8,
+    #파이를 쪼개기
+    #explode = 0.1,
+    #그래프 각도 
+    theta=pi/5,
+    #그림자 
+    shade=1,
+    
+    radius = 0.9
+    
+    )
+```
+
+# 윤석열 후보의 광역시도별 득표율
+
+### 윤석열 후보의 광열시도별 득표수
+
+```{r}
+head(election)
+electionY_tot <- aggregate(윤석열 ~ 광역시도, election, sum)
+electionY_tot
+```
+
+### 윤석열 후보 총 득표수
+
+```{r}
+tot <- sum(election$윤석열)
+tot
+```
+
+### 윤석열 후보 광역시도별 득표율
+
+```{r}
+electionY_tot$ratioY <- round(electionY_tot$윤석열/tot*100, 2)
+electionY_tot
+```
+
+### 득표율 내림차순으로 정렬
+
+```{r}
+electionY_order <- arrange(electionY_tot[,c(1:3)], desc(ratioY))
+electionY_order
+```
+
+### 3D pie chart 그리기
+
+### label 만들기
+
+```{r}
+labelY <- paste(electionY_order$광역시도, "\n", electionY_order$ratioY, '%')
+labelY
+```
+
+### chart 생성
+
+```{r}
+par(family='AppleGothic')
+pie3D(electionY_order$ratioY,
+      main = '윤석열후보의 광역시도별 득표율',
+      labels = labelY,
+      labelcex = 0.6
+    )
+```
+
+# 윤석열 후보의 서울득표 Top5만 득표율로 표시하고 나머지 지역은 기타로 합치기
+
+### 서울특별시 테이블(필요한 데이터와 필요한 칼럼만 만들어놓기)
+
+```{r}
+election_seoul <- subset(election, 광역시도 == '서울특별시')
+#서울특별시 method2
+  #election[election$광역시도=='서울특별시',]
+#정렬 및 필요한 칼럼만 미리 추출
+  #arrange(election_seoul, desc(윤석열))[,c(2,6)]
+election_seoul
+```
+
+### 서울특별시 시군구별 윤석열 투표수
+
+```{r}
+election_seoul_y <- aggregate(윤석열 ~ 시군구, election_seoul, sum)
+election_seoul_y
+```
+
+### 서울특별시 윤석열 총투표수
+
+```{r}
+sum(election_seoul_y$윤석열)
+```
+
+### 서울특별시 시군구별 윤석열 투표율
+
+```{r}
+election_seoul_y$ratioYY <- round(election_seoul_y$윤석열 / sum(election_seoul_y$윤석열)*100, 2)
+election_seoul_y
+```
+
+### 내림차순 정렬
+
+```{r}
+election_seoul_y_order <- arrange(election_seoul_y[,c(1:3)], desc(election_seoul_y$ratioYY))
+election_seoul_y_order
+```
+
+### top 5 제외한 나머지 더하기
+
+```{r}
+head(election_seoul_y_order, 5)
+electionDown <- election_seoul_y_order[-c(1:5), ]
+electionDownAdd <- sum(electionDown$ratioYY)
+electionDownAdd
+
+```
+
+```{r}
+yu <- data.frame('기타', electionDownAdd)
+colnames(yu) <- c('시군구', 'ratioYY')
+yu
+```
+
+### top5와 나머지 합친 기타 칼럼 만들기
+
+```{r}
+
+tt <- head(election_seoul_y_order, 5)[, c(1,3)]
+tt
+#method1
+  #tt1 <- c('기타', electionDownAdd)
+#method2
+yu <- data.frame('기타', electionDownAdd)
+colnames(yu) <- c('시군구', 'ratioYY')
+yu
+
+election_final <- rbind(tt, yu)
+
+#method1을 사용하면 numeric으로 변환해줘야 됨(method2는 안해도 될듯)
+election_final$ratioYY <- as.numeric(election_final$ratioYY)
+election_final
+```
+
+```{r}
+election_final
+```
+
+## 3D pie chart 그리기
+
+### 🏷️ label 만들기
+
+```{r}
+election_final
+
+labelYO <- paste(election_final$시군구, "\n", election_final$ratioYY, '%')
+labelYO
+```
+
+### 🍕 pie 만들기
+
+```{r}
+par(family='AppleGothic')
+pie3D(election_final$ratioYY,
+      main='윤석열 후보 서울 득표 Top5',
+      labels = labelYO,
+      labelcex = 0.6,
+      explode = 0.1
+    )
+```
+
+# 대선주자 출생지별 득표율 분석테이블 만들기: 성북구의 후보자별 득표수
+
+### 필요한 데이터 정제
+
+```{r}
+election
+election_sung <- subset(election, 시군구 == '성북구')[,c(2,4,5:7)]
+election_sung
+```
+
+### 
+
+### 각 후보자 득표수\>비율로 만들기(기타 포함)
+
+```{r}
+#방법1
+sung_ab <- c(election_sung[,3:5], election_sung[,2]-sum(election_sung[,3:5]))
+sung_ab
+#이러면 굳이 numeric으로 바꾸지 않아도 된다.
+```
+
+```{r}
+#방법2
+#기타
+election_sung$기타 <-round((election_sung[,2] - sum(election_sung[,c(3:5)]))/election_sung[,2]*100, 2)
+
+#각 투표자 성북구 득표 비율 
+election_sung$이재명 <- round(election_sung[,3]/election_sung[,2]*100,2)
+election_sung$윤석열 <- round(election_sung[,4]/election_sung[,2]*100,2)
+election_sung$심상정 <- round(election_sung[,5]/election_sung[,2]*100,2)
+
+
+#for문으로 해보기 
+```
+
+```{r}
+election_sung_final <- election_sung[,c(3:6)]
+election_sung_final
+election_sung_final_n <- as.numeric(election_sung_final)
+election_sung_final_n
+```
+
+## piechart
+
+### label만들기
+
+```{r}
+
+label1 <- paste(colnames(election_sung_final), "\n", election_sung_final, '%')
+label1
+
+
+```
+
+```{r}
+election_sung_final[,1:4]
+#행 번호 초기화
+rownames(election_sung_final) <- c()
+
+election_sung_final[,1:4]
+```
+
+```{r}
+par(family='AppleGothic')
+pie3D(as.matrix(election_sung_final[,1:4]),
+      main="후보 서울 득표 Top5",
+      labels = label1,
+      labelcex = 0.6,
+      #explode = 0.1
+    )
+```
+
+# 투표수가 가장 많은 4지역의 후보별 득표수 차이
+
+### 각 광역시도 투표수 합산
+
+```{r}
+election
+
+##합산
+a <- aggregate(cbind(투표수,이재명,윤석열,심상정) ~ 광역시도, election, sum)
+a
+##정렬
+aa <- arrange(a, desc(투표수))
+aa
+election_four <- head(aa, 4)
+vovo <- election_four[, 3:5]
+vovo
+t(vovo)
+#election_four_t <- t(election_four[,3:5])
+#election_four_t[, 1:4]
+
+
+```
+
+### 차트 그리기
+
+```{r}
+par(family='AppleGothic')
+options(scipen=1000)
+barplot(as.matrix(t(vovo)),
+        #데이터가 축을 넘어가면 안됨(조정해주기)
+        ylim = c(0,5000000),
+        
+        #직선 바 위로쌓기 > 옆으로 쌓기
+        beside = T,
+        names = c("경기도", '서울특별시', '부산광역시', '경상남도'),
+        main = '투표수가 가장 많은 4지역의 후보별 득표수 차이',
+        cex.names = 0.8,
+        col = c('skyblue', 'red', 'yellow'),
+        #x에 이름을 줘야됨(위에 rownames준 것 확인), 데이터 가리지 않게!! 여기서는 y축 크기 조정해줌
+        cex.axis = 0.6,
+       legend.text = T
+        )
+```
+
+# 투표수가 높은 시군구의 후보별 득표수
+
+데이터 정제
+
+```{r}
+election
+top_five <- head(arrange(election, desc(투표수)), 5)
+top_five
+top_five_all <- arrange(aggregate(cbind(투표수, 이재명, 윤석열, 심상정)~시군구, top_five, sum), -투표수)
+top_five_data <- arrange(aggregate(cbind(투표수, 이재명, 윤석열, 심상정)~시군구, top_five, sum), -투표수)[, 3:5]
+top_five_all
+class(top_five_data)
+
+#data.frame을 t로 뒤집어주면 matrix로 바뀐다.
+#
+top_five_data1 <- t(top_five_data)
+colnames(top_five_data1) <- paste(top_five$광역시도, top_five$시군구)
+top_five_data1
+```
+
+### 
+
+```{r}
+#위에서 colnames 주면 굳이 따로 name 변수 만들지 않아도 된다. 
+name <- paste(top_five$광역시도, top_five_all$시군구)
+name
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(top_five_data1,
+        ylim=c(0,600000),
+        col = c('skyblue', 'red', 'yellow'),
+        #names = name,
+        cex.names = 0.5,
+        cex.axis = 0.5,
+        legend.text = T
+        )
+```

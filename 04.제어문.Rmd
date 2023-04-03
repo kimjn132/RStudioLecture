@@ -1,0 +1,33 @@
+# if 제어문
+
+```{r}
+a <- c(8, 10, 11)
+#java 삼항연산자
+ifelse(a %% 2 ==0, "짝수", "홀수")
+```
+
+```{r}
+a <- c(8,10,11)
+ifelse(a %% 2 ==0, paste(a, ":짝수"), paste(a, ":홀수"))
+```
+
+### csv file을 불러서 사용
+
+```{r}
+excel <- read.csv("./Data/excel.csv")
+head(excel)
+```
+
+```{r}
+summary(excel)
+```
+
+q1 컬럼에서 Data가 3보다 크거나 같으면 data의 제곱근을 구하고 아니면 원래 data를 출력하기
+
+```{r}
+excel
+q1 <- excel$q1
+ifelse(q1>=3, sqrt(q1), q1)
+
+excel$q6 = excel$ifelse(q1>=3, sqrt(q1), q1)
+```

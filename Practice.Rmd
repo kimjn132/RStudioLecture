@@ -1,0 +1,284 @@
+# 실험
+
+```{r}
+x <- c(1,2)
+y <- c(6,7,8)
+c(x,y)
+length(c(x,y))
+```
+
+```{r}
+a <- c(1,2,3,4)
+b <- c(5,6)
+append(a,b)
+length(append(a,b,after=4))
+help(append)
+```
+
+```{r}
+length(paste(1,2,3))
+length(paste('문자열','합치기'))
+```
+
+```{r}
+test <- c(1,2,3,4,5)
+paste(test)
+```
+
+```{r}
+length(paste(rep('a', 5)))
+```
+
+```{r}
+paste(c('첫','두','세','네','다섯'), rep('번째', 5))
+```
+
+```{r}
+paste('첫', '두', '세', '네', '다섯', rep('번째', 5))
+```
+
+```{r}
+x <- c('a', 'b', 'c')
+y <- c('d', 'e', 'g')
+append(x,y,after=2)
+```
+
+```{r}
+seq(from = 2, to = 10, by = 2)
+seq(2, 10, 2)
+```
+
+```{r}
+seq(2, 20, length.out=4)
+```
+
+```{r}
+seq(0, 30, length.out=4)
+```
+
+apply
+
+```{r}
+df <- data.frame(x=1:5, y=seq(2, 10, 2), z=c("a", "b", "c", "d", "e"))
+df
+df$xy합계 = df$x + df$y
+df
+```
+
+```{r}
+df
+apply(df[, 1:2], 2, sum)
+apply(df[, 1:2], 2, mean)
+apply(df[, 1:2], 2, sd)
+
+subset(df, x>=3 & y>=8)
+```
+
+```{r}
+excel <- read.csv("./Data/excel.csv")
+excel1 <- head(excel)
+excel1
+```
+
+q1 컬럼에서 Data가 3보다 크거나 같으면 data의 제곱근을 구하고 아니면 원래 data를 출력하기
+
+```{r}
+ifelse(excel1$q1 >=3, sqrt(excel1$q1), excel1$q1)
+excel1$q6 <- trunc(ifelse(excel1$q1 >=3, sqrt(excel1$q1), excel1$q1))
+excel1
+```
+
+```{r}
+for(i in 1:10){
+  cat(i, " => ", sqrt(i), "\n")
+}
+```
+
+1부터 100까지의 짝수의 합계 구하기
+
+1)  
+
+```{r}
+data <- 1:100
+data
+add <- sum(seq(0,length(data), 2))
+add
+
+```
+
+2)  ifelse 사용
+
+```{r}
+sum(ifelse(data%%2==0, data, 0))
+```
+
+```{r}
+excel <- read.csv("./Data/excel.csv")
+head(excel)
+```
+
+\>\>홀수의 합 & 짝수의 합 of q3
+
+```{r}
+dataa<-excel$q3
+sumEven<-sumOdd<-0
+
+for(i in dataa){
+  if(i %% 2 == 0){
+    sumEven = sumEven+i
+  }else{
+    sumOdd = sumOdd+i
+  }
+}
+
+cat("짝수의 합은 ", sumEven, "홀수의 합은", sumOdd)
+
+```
+
+## 구구단
+
+2단
+
+```{r}
+gugu <- function(){
+  for(i in 1:9){
+  cat(2, " X ", i, " = ", 2*i, "\n")
+  }
+}
+gugu()
+```
+
+N단
+
+```{r}
+gugu1 <- function(n){
+  for(i in 1:9){
+  cat(n, " X ", i, " = ", n*i, "\n")
+  }
+}
+gugu1(3)
+```
+
+n\*m단
+
+```{r}
+gugu2 <- function(n,m){
+  for(i in 1:m){
+  cat(n, " X ", i, " = ", n*i, "\n")
+  }
+}
+gugu2(2,12)
+```
+
+```{r}
+m <- seq(2,8,2)
+n <- seq(2,8,2)
+
+gugu3 <- function(){
+  for(i in m){
+    for(j in n)
+  cat(i, " X ", j," = ", i*j, "\n")
+  }
+}
+gugu3()
+
+```
+
+```{r}
+for(i in 1:length(m)){
+cat(paste(m[i], " X ", n, " = ", m[i]*n, "\n"))
+}
+```
+
+gugu1(2:3,1:5)
+
+```{r}
+gugu1 <- function(n,m){
+  for(i in 1:length(n)){
+  cat(paste(n[i], " X ", m, " = ", n[i]*m, "\n"))
+}
+}
+gugu1(2:3,1:5)
+```
+
+7Rmd번부터 하기
+
+```{r}
+runif(1)*3
+```
+
+### 주사위 시뮬레이션
+
+```{r}
+trunc(runif(6)*6+1)
+```
+
+```{r}
+dice <- function(n){
+  no1 = 0
+  no2 = 0
+  no3 = 0
+  no4 = 0
+  no5 = 0
+  no6 = 0
+  
+  for(i in 1:n){
+    x<-trunc(runif(1) *6) +1
+    if(x == 1) no1 = no1 + 1
+    if(x == 2) no2 = no2 + 1
+    if(x == 3) no3 = no3 + 1
+    if(x == 4) no4 = no4 + 1
+    if(x == 5) no5 = no5 + 1
+    if(x == 6) no6 = no6 + 1
+  }
+  cat("1 => \t", no1, "\n")
+  cat("2 => \t", no2, "\n")
+  cat("3 => \t", no3, "\n")
+  cat("4 => \t", no4, "\n")
+  cat("5 => \t", no5, "\n")
+  cat("6 => \t", no6, "\n")
+  cat("-------------------","\n")
+}
+```
+
+```{r}
+dice(10)
+dice(100)
+dice(1000)
+dice(10000)
+dice(100000)
+dice(1000000)
+```
+
+```{r}
+dice <- function(n){
+  diceFace <- rep(0, 6)
+  
+  for(i in 1:n){
+    
+    x<-trunc(runif(1) *6) +1
+    diceFace[x] <- diceFace[x]+1
+  }
+  for(i in 1:length(diceFace)){
+    cat("no",i, "=>", diceFace[i], "\n")
+  }
+   cat("--------------------\n")
+}
+
+```
+
+```{r}
+diceF <- rep(0,6)
+x<-trunc(runif(1) *6) +1
+x
+diceF[3]
+```
+
+```{r}
+dice(10)
+dice(100)
+dice(1000)
+dice(10000)
+dice(100000)
+dice(1000000)
+```

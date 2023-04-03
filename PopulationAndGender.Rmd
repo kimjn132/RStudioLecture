@@ -1,0 +1,443 @@
+```{r}
+library(dplyr)
+```
+
+# 전국 인구별 인구 분포
+
+```{r}
+
+pop <- read.csv("./Data/population_1960_2020.csv")
+head(pop)
+tail(pop)
+```
+
+# 전국 광역시별 인구분포
+
+```{r}
+metro <- read.csv("./Data/metro_total_1992_2020.csv")
+head(metro)
+tail(metro)
+```
+
+## metro flip 정제
+
+### 테이블 돌리고 칼럼 년도별로 맞추기
+
+```{r}
+flipMetro <- as.data.frame(t(metro))
+cName <- flipMetro[1,]
+flipMetro
+```
+
+```{r}
+colnames(flipMetro) <- c(cName)
+flipMetro <- flipMetro[-1,]
+```
+
+```{r}
+flipMetro
+```
+
+# 성별 정제
+
+### 테이블 돌리고 칼럼 년도별로 맞추기
+
+```{r}
+pop1 <- as.data.frame(t(pop))
+ccname <- as.data.frame(t(pop))[1,]
+
+```
+
+```{r}
+colnames(pop1) <- c(ccname)
+pop <- pop1[-1,]
+```
+
+```{r}
+pop <- pop[,-c(1:32)]
+pop
+```
+
+## metro와 성별 rbind
+
+```{r}
+rbind(pop, flipMetro)
+```
+
+### 최근 10년 데이터만 보여줌 (metro & gender)
+
+```{r}
+pop <- pop[, -c(1:(ncol(pop)-10))]
+pop
+```
+
+```{r}
+flipMetro <- flipMetro[, -c(1:(ncol(flipMetro)-10))]
+flipMetro
+```
+
+```{r}
+summary(pop)
+plot(pop)
+```
+
+```{r}
+summary(flipMetro)
+plot(flipMetro)
+```
+
+## gender 막대그래프
+
+```{r}
+par(family='AppleGothic')
+options(scipen = 100)
+barplot(as.matrix(pop),
+        beside = T,
+        main = "성별 인구통계지표 (2011년~2020년",
+        xlab = "연도",
+        ylab = "인구수",
+        ylim = c(0, 80000000),
+        names = c(colnames(pop)),
+        cex.names = 0.7,
+        cex.axis = 0.5,
+        col = c('grey','skyblue', 'orange'),
+        legend.text = T
+        )
+
+```
+
+## metro 수도권, 비수도권 나누기
+
+```{r}
+flipMetro1 <- flipMetro[-1,]
+```
+
+```{r}
+seouls <- flipMetro1[c(1,9),]
+seouls
+```
+
+```{r}
+outSeouls <- flipMetro1[-c(1,9),]
+outSeouls
+```
+
+```{r}
+seoulSum <- colSums(seouls)
+```
+
+```{r}
+outSeoulSum <- colSums(outSeouls)
+```
+
+```{r}
+flipMetroSum <- as.data.frame(rbind(seoulSum, outSeoulSum))
+```
+
+```{r}
+rownames(flipMetroSum) <- c("수도권", "비수도권")
+flipMetroSum
+```
+
+### 수도권 비수도권 각 비율
+
+```{r}
+flipMetroSum1 <- as.data.frame(t(flipMetroSum))
+```
+
+```{r}
+flipMetroSum1 <- cbind(rowSums(flipMetroSum1), flipMetroSum1)
+flipMetroSum1
+```
+
+```{r}
+colnames(flipMetroSum1) <- c("전국", "수도권", "비수도권")
+flipMetroSum1
+```
+
+### mutate함수 사용해서 각 행별 전체 비율 구함
+
+```{r}
+sudo <- mutate(flipMetroSum1, "수도권 비율" = (수도권/전국*100))[,4]
+sudo
+```
+
+```{r}
+bisudo <- mutate(flipMetroSum1, "비수도권 비율" = (비수도권/전국*100))[,4]
+bisudo
+```
+
+```{r}
+flipMetroSum1 <- cbind(flipMetroSum1, sudo, bisudo)
+```
+
+```{r}
+colnames(flipMetroSum1) <- c("전국", "수도권", "비수도권", "수도권비율", "비수도권비율")
+```
+
+```{r}
+flipMetroRatio <- flipMetroSum1[,c(4:5)]
+```
+
+```{r}
+flipMetroRatio <-as.data.frame(t(flipMetroRatio))
+```
+
+```{r}
+flipMetroRatio
+```
+
+## 수도권,비수도권 각 비율의 막대차트
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+par(family='AppleGothic')
+
+options(scipen = 100)
+barplot(as.matrix(flipMetroRatio),
+        beside = T,
+        
+        )
+
+```
+
+# EmergencyRoom in Korea
+
+```{r}
+emergencyRoom <- read.csv("./Data/EmergencyroomFlip1.csv")
+emergencyRoom
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+str(emergencyRoom)
+```
+
+### emergencyRoom - \>\> 0으로 변환
+
+```{r}
+for(i in 4:ncol(emergencyRoom)){
+  emergencyRoom[,i] <- str_replace_all(emergencyRoom[,i],'-','0')
+}
+emergencyRoom
+```
+
+```{r}
+emergencyRoom <- emergencyRoom[1,-1]
+
+```
+
+```{r}
+colnames(emergencyRoom)
+```
+
+```{r}
+emergencyRoomNumber <- as.data.frame(as.numeric(emergencyRoom))
+```
+
+```{r}
+rownames(emergencyRoomNumber)<-c(colnames(emergencyRoom))
+```
+
+```{r}
+emergencyRoom <- as.data.frame(t(emergencyRoomNumber))
+```
+
+### 수도권 비수도권으로 나누기
+
+```{r}
+
+seoulESum <- sum(emergencyRoom[,c("서울","경기")])
+```
+
+```{r}
+outSeoulESum <- sum(emergencyRoom[, -c(1:2,10)])
+```
+
+```{r}
+newEmergency <- cbind(emergencyRoom[,1], seoulESum,outSeoulESum)
+```
+
+```{r}
+colnames(newEmergency) <- c("전체", "수도권", "비수도권")
+newEmergency <- as.data.frame(newEmergency)
+```
+
+### 수도권과 비수도권의 비율 구학
+
+```{r}
+seoulEratio <- round(newEmergency[,2]/newEmergency[,1]*100, 2)
+
+outSeoulEratio <- round(newEmergency[,3]/newEmergency[,1]*100, 2)
+```
+
+```{r}
+newEmergency <- cbind(newEmergency, seoulEratio, outSeoulEratio)
+```
+
+```{r}
+colnames(newEmergency) <- c("전체", "수도권", "비수도권", "수도권 비율", "비수도권 비율")
+```
+
+```{r}
+newEmergency
+```
+
+### 수도권 비수도권 비율 파이 차트
+
+```{r}
+region <- colnames(newEmergency)[c(2:3)]
+labelE <- paste(region, "\n", newEmergency[,c(4,5)])
+```
+
+```{r}
+par(family='AppleGothic')
+pie(as.matrix(newEmergency[,c(4,5)]),
+    labels = labelE,
+    col = c("orange", "skyblue"),
+    main = "2020년 수도권과 비수도권 응급실 비율 현황"
+    )
+```
+
+# 2020 수도권 비수도권 인구수 비율파이차트
+
+```{r}
+region
+label2020 <- paste(region, "\n", round(flipMetroRatio[,"2020"],2), "%")
+label2020
+```
+
+```{r}
+par(family='AppleGothic')
+pie(flipMetroRatio[,"2020"],
+    labels = label2020,
+    main = "2020년 수도권과 비수도권 인구 비율 현황",
+    col = c("orange", "skyblue"),
+    )
+```
+
+# 2020 광역시별 인구 분포 현황
+
+```{r}
+rownames(flipMetro)
+
+```
+
+```{r}
+flipMetro2020 <- as.data.frame(flipMetro$`2020`)
+```
+
+```{r}
+rownames(flipMetro2020) <- c(rownames(flipMetro))
+
+```
+
+```{r}
+colnames(flipMetro2020) <- "전체"
+```
+
+```{r}
+flipMetro2020$전체[-1]
+```
+
+```{r}
+cc <- cbind(as.data.frame(flipMetro2020[-1, ]),
+ as.data.frame(flipMetro2020$전체[-1]/flipMetro2020[1,]*100))
+```
+
+```{r}
+colnames(cc) <- c("number", "ratio")
+rownames(cc) <- c(rownames(flipMetro2020)[-1])
+```
+
+```{r}
+flipMetro2020Ratio <- cc
+```
+
+### 2020 광역시별 인구 분포 비율 파이차트
+
+```{r}
+flipMetro2020Ratio$ratio
+```
+
+```{r}
+cc
+label2020pop <- paste(rownames(emergencyRoomTT), "\n", round(flipMetro2020Ratio$ratio, 2))
+label2020pop
+```
+
+## 파이차트
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+par(family='AppleGothic')
+pie(as.matrix(flipMetro2020Ratio),
+    labels = label2020pop,
+    cex = 0.5,
+    main = "2020년 인구 분포 비율 현황"
+    
+    )
+```
+
+# 광역시별 응급실 분포 비율
+
+```{r}
+cc
+```
+
+```{r}
+emergencyRoomT <- as.data.frame(t(emergencyRoom))
+sum(emergencyRoomT)
+```
+
+```{r}
+emergencyRoomTT <- cbind(emergencyRoomT, round(emergencyRoomT / sum(emergencyRoom)*100, 2))
+emergencyRoomTT
+```
+
+```{r}
+rownames(emergencyRoomTT) <- 
+c(colnames(emergencyRoom))
+
+colnames(emergencyRoomTT) <- c("응급실수", "ratioE")
+emergencyRoomTT
+```
+
+```{r}
+emergencyRoomTT <- as.data.frame(emergencyRoomTT)
+```
+
+```{r}
+emergencyRoomTT$ratioE
+```
+
+## 광역별 응급실 분포 파이차트
+
+```{r}
+
+labelE2020 <- paste(rownames(emergencyRoomTT),"\n", emergencyRoomTT$ratioE)
+```
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+par(family='AppleGothic')
+
+pie(as.matrix(emergencyRoomTT[,2]),
+    labels = labelE2020,
+    cex = 0.5,
+    main = "2020년 전국 응급실 분포 비율 현황"
+    
+    )
+```

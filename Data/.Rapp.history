@@ -1,0 +1,2 @@
+load("/Users/annakim/Desktop/R/Data/randomForest_dementia_final_83.rds")
+load("/Users/annakim/Desktop/R/Data/randomForest_iris.rds")

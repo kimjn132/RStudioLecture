@@ -1,0 +1,87 @@
+# 함수
+
+함수는 코드의 집합이다.
+
+```{r}
+vec <- 10:20
+
+min(vec)
+max(vec)
+mean(vec)
+median(vec)
+sum(vec)
+sd(vec)
+summary(vec)
+table(vec)
+range(vec)
+
+```
+
+구구단 범위로 하기
+
+```{r}
+gugu1 <-
+function(n,m){
+  cat(paste(n, "X", m, "=", n*m, "\n"), seq="")
+}
+```
+
+```{r}
+gugu1(2:3,1:5)
+```
+
+```{r}
+gugu2 <- function(n,m){
+  for(i in 1:length(n)){
+  cat(paste(n[i], " X ", m, " = ", n[i]*m, "\n"))
+}
+}
+```
+
+```{r}
+gugu2(2:3, 1:5)
+```
+
+# 결측치(na) 자료 평균 계산
+
+```{r}
+data <- c(10, 20, 5, 4, 40, 7, NA, 6, 3, NA, 2, NA)
+data
+```
+
+```{r}
+sum(is.na(data))
+table(is.na(data))#True가 NA값 개수 
+```
+
+```{r}
+mean(data, na.rm = T)
+```
+
+```{r}
+# 1) NA <- 0
+data
+ifelse(is.na(data), 0, data)
+mean(ifelse(is.na(data), 0, data))
+
+
+
+```
+
+```{r}
+data
+ifelse(is.na(data), mean(data, na.rm=T), data)
+mean(ifelse(is.na(data), mean(data, na.rm=T), data))
+```
+
+```{r}
+data
+ifelse(is.na(data), median(data, na.rm=T), data)
+mean(ifelse(is.na(data), median(data, na.rm=T), data))
+```
+
+```{r}
+data
+ifelse(is.na(data), max(data, na.rm=T), data)
+mean(ifelse(is.na(data), max(data, na.rm=T), data))
+```

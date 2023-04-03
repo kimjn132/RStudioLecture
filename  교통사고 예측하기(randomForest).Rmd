@@ -1,0 +1,125 @@
+# 교통사고 예측하기 (회귀식과 RamdomForest 예측 비교)
+
+```{r}
+seoul <- read.csv("./Data/newSeoul2019.csv")
+head(seoul)
+```
+
+```{r}
+JongRo <- subset(seoul, 자치구명 == '종로구')
+JongRo
+nrow(JongRo)
+```
+
+```{r}
+rownames(JongRo) <- c()
+tail(JongRo)
+```
+
+```{r}
+head(JongRo)
+```
+
+```{r}
+str(JongRo)
+```
+
+종로구의 발생건수와 부상자수의 상관계수
+
+```{r}
+cor(JongRo$발생건수, JongRo$부상자수)
+```
+
+\>\>92%이상 상관있다.
+
+종로구의 발생건수와 부상자수의 산포도 및 회귀선 그리기
+
+```{r}
+par(family="AppleGothic")
+#상관계수에서 tilt
+plot(JongRo$부상자수 ~ JongRo$발생건수)
+
+#회귀식 : lm(종속변수~독립변수)
+r <- lm(JongRo$부상자수 ~ JongRo$발생건수)
+abline(r, col = 'red')
+```
+
+데이터 분포가 많이 몰려있는 곳이 정확도가 높아진다. 예측을 하려면 범위 안에서만 해야 한다. 그렇지 않으면 예측 못하고 그냥 랜덤한 결과만 나온다.
+
+```{r}
+summary(r)
+```
+
+예측율
+
+회귀식: 부상자수 = 1.360 \* 발생건수
+
+회귀식으로 발생건수가 100건일때 부상자수 예측 : 136
+
+```{r}
+1.360*100
+```
+
+### 렌덤포레스트로 발생건수가 100건일때의 부상자수 예측
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(JongRo$발생건수, p=0.7, list = F)
+data.train <- JongRo[samp,]
+data.test <- JongRo[-samp,]
+samp
+data.train
+data.test
+```
+
+\>\>회귀식에서 이미 예측력 확인 했으므로 할 필요 없다.
+
+```{r}
+rf <- randomForest(부상자수 ~ 발생건수, data = JongRo, ntree = 100)
+rf
+```
+
+```{r}
+predict(rf, list(발생건수=100))
+```
+
+```{r}
+list(발생건수=100)
+```
+
+### 발생건수가 145건일경우 비교
+
+```{r}
+1.360*145
+```
+
+```{r}
+rf1 <- randomForest(부상자수 ~ 발생건수, data = JongRo, ntree = 100)
+rf1
+```
+
+```{r}
+predict(rf1, list(발생건수=145))
+```
+
+### 발생건수가 150건
+
+```{r}
+1.360*150
+```
+
+```{r}
+rf2 <- randomForest(부상자수 ~ 발생건수, data = JongRo, ntree = 100)
+rf2
+```
+
+예측할 때 회귀 그래프를 보고 분포도를 먼저 파악한 후에 (발생건수) 범위 안에서만 예측해야 한다.
+
+```{r}
+predict(rf2, list(발생건수=110))
+```

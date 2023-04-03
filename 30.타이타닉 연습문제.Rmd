@@ -1,0 +1,51 @@
+# 1. Survived와 Death의 비중을 동일하게 만들고 예측력 구하기
+
+```{r}
+titanic <- read.csv("./Data/Titanic_train.csv")
+```
+
+```{r}
+head(titanic)
+tail(titanic)
+```
+
+```{r}
+sum(titanic$Survived == 1)
+sum(titanic$Survived == 0)
+```
+
+-\> 사망자가 더 많으므로 사망자의 수를 생존자 수와 맞춥니다
+
+passengerId와 rowname이 같다는 점을 활용합니다
+
+```{r}
+#사망 인원의 PassengerId 구하기 
+passengerId_death <- subset(titanic, Survived == 0)$PassengerId
+passengerId_death
+```
+
+위에서 구한 사망 인원의 PassengerId 중 342개를 뽑아냅니다
+
+```{r}
+#342개 샘플링 
+samp_death <- sort(sample(passengerId_death, 342)) 
+samp_death
+```
+
+passengerId는 rowname과 같으므로 밑의 코드가 가능
+
+```{r}
+titanic[samp_death,]
+```
+
+# 2. Fare를 추가해 예측해보기
+
+# 3. Age를 추가해 예측하기
+
+# 4. Fare, Age를 추가해 예측하기
+
+# 5. Age를 연령대로 구분해 예측하기
+
+# 6. 국가별로 구분해 예측하기
+
+# 7. Fare를 분류해 예측하기

@@ -1,0 +1,188 @@
+# 기간별 및 자치구별 교통사고 현황
+
+## 처음 데이터를 보고 데이터의 구성 판단-컬럼, 합계표, -, 구분 칼럼, 반복 행,열 보기
+
+\*데이터 모양을 어떻게 만들 지 생각을 먼저 해야한다.
+
+\*어떤 분석을 할 지에 따라 테이블 구성이 많이 달라진다.
+
+```{r}
+accident <- read.delim("./Data/trafficAccident_2011_2019.txt")
+head(accident)
+```
+
+```{r}
+tail(accident)
+```
+
+```{r}
+str(accident)
+```
+
+```{r}
+summary(accident)
+```
+
+기간별, 지역별, 월별, 사고(발생, 사망, 부상)
+
+### 필요없는 칼럼, 행 제거: 총 합산 데이터 지운 테이블
+
+```{r}
+accident
+#method1
+#tot <- c(rownames(subset(accident, 자치구별=='합계')))
+
+#tot<-as.numeric(tot)
+#tot
+
+#accident1 <- accident[-tot,]
+#method2
+accident1 <- accident[-c(1:3), -4]
+accident1
+
+```
+
+```{r}
+plot(accident1)
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+accident1
+```
+
+### 합계 ','없애고 숫자로 바꾸기
+
+```{r}
+accident1$합계 < -as.numeric(str_remove_all(accident1$합계, ","))
+accident1
+accidentMonth <- accident1[,3:16]
+accidentMonth
+
+```
+
+### '-' \>\> 0으로 바꾸기(for문), 데이터 숫자로 바꾸기
+
+```{r}
+#하나 테스트 해보고 for문으로 돌리기! 
+for(i in 1:length(colnames(accidentMonth))){
+accidentMonth[,i] = as.numeric(str_replace_all(accidentMonth[,i], '-', '0'))
+}
+
+
+```
+
+### NA 확인
+
+```{r}
+sum(is.na(accidentMonth))
+```
+
+### 문자 데이터 있는 칼럼까지 숫자로 변환하면 에러 나서 따로 만들어서 cbind로 묶음
+
+```{r}
+aaa<-accident1[,1:3]
+accident1 <- cbind(aaa,accidentMonth)
+accident1
+```
+
+```{r}
+#2011년도
+as.data.frame(t(accidentMonth))[1:12,1:3]
+colnames(few) <- c('발생건수', '사망자수', '부상자수')
+few
+```
+
+```{r}
+#1~12월만 추출 
+month <- substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4)
+
+#2011년 기간 
+year <-rep(unique(accident1$기간)[1],12)
+
+#종로구 only
+
+region<-rep(unique(accident1$자치구별)[1],12)
+
+month
+year
+region
+as.data.frame(t(accidentMonth))[1:12,1:3]
+
+```
+
+```{r}
+year1
+region1
+```
+
+총 나와야 하는 데이터 개수
+
+```{r}
+length(unique(accident1$자치구별))
+length(unique(accident1$기간))
+25*3
+25*9
+75*9
+2700/12
+```
+
+```{r}
+accident1
+region1 <- for(i in 1:25){
+#year<-rep(accident1$기간[1],12)
+#cat(ep(unique(accident1$기간)[1],12))
+
+year1<-rep(unique(accident1$자치구별)[i],12)
+
+
+}
+
+#as.data.frame(t(accidentMonth))[1:12,1:3]
+```
+
+```{r}
+year1
+```
+
+```{r}
+#데이터 프레임 세팅
+accident2 <- data.frame(기간=rep(unique(accident1$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1$자치구별)[1],12))
+accident2
+```
+
+```{r}
+#1
+accident2 <- data.frame(기간=rep(unique(accident1$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1$자치구별)[1],12))
+
+# 세팅한 데이터 프레임에 만들어 놓은 월별 건수 데이터 cbind로 붙이기
+jongno <- cbind(accident2,as.data.frame(t(accidentMonth))[1:12,1:3])
+
+#2
+accident3 <- data.frame(기간=rep(unique(accident1$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1$자치구별)[2],12))
+
+junggu <- cbind(accident3, as.data.frame(t(accidentMonth))[1:12,4:6])
+
+
+jongno <- colnames(jongno) <- c()
+junggu <- colnames(junggu) <- c()
+jongno
+junggu
+```
+
+cbind((data.frame(기간=rep(unique(accident1\$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1\$자치구별)[3],12))), as.data.frame(t(accidentMonth))[1:12,7:9])
+
+```{r}
+cbind((data.frame(기간=rep(unique(accident1$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1$자치구별)[3],12))), as.data.frame(t(accidentMonth))[1:12,7:9])
+```
+
+```{r}
+af=0
+for(i in 1:25){
+ af = cbind((data.frame(기간=rep(unique(accident1$기간)[1],12),월=substring(c(rownames(as.data.frame(t(accidentMonth)))),2,4), 자치구별=rep(unique(accident1$자치구별)[i],12))), as.data.frame(t(accidentMonth))[1:12,i:i+2])
+}
+af
+```

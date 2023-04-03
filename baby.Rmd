@@ -1,0 +1,116 @@
+# 1880년 부터 2014년 까지의 미국의 아기이름을 정리해논 데이터셋
+
+```{r}
+baby <- read.csv("./Data/R_Baby_Names_1880-2014.csv")
+head(baby)
+```
+
+```{r}
+tail(baby)
+```
+
+```{r}
+str(baby)
+```
+
+### 불필요한 데이터 없애기(자르기)
+
+```{r}
+
+baby$Year<-substr(baby$Year, 7, 11)
+
+
+```
+
+```{r}
+baby
+```
+
+### 저장하여 File 크기 비교하기
+
+```{r}
+write.csv(baby, "./Data/babyname_cut1.csv", row.names = F)
+```
+
+```{r}
+baby1 <- read.csv("./Data/babyname_cut1.csv")
+```
+
+# baby에서 여자 아이만 Female이라는 Dataset을 만들고 row수 구하기
+
+```{r}
+baby1
+```
+
+```{r}
+female <- subset(baby1, Gender == 'F')
+nrow(female)
+```
+
+### 여자 아이 이름 가짓수
+
+```{r}
+length(unique(female$Name))
+```
+
+```{r}
+library(dplyr)
+```
+
+### 여자 아이 이름 중 가장 많이 사용된 이름과 Count수 구하기
+
+```{r}
+female
+female_nameC <- arrange(aggregate(Count~Name, female, sum), desc(Count))
+female_nameC[1,]
+
+
+```
+
+# 1880\~2014년 인구분포 현황 그래프 그리기
+
+```{r}
+female
+male
+```
+
+### 연도별 count
+
+```{r}
+maleCount <- aggregate(Count~Year, male, sum)
+femaleCount <- aggregate(Count~Year, female, sum)
+maleCount
+femaleCount
+
+```
+
+```{r}
+par(family='AppleGothic')
+plot(maleCount,
+      type='l',
+     ylim = c(0, 2500000),
+     cex.axis=0.5,
+     col='blueviolet'
+     )
+lines(femaleCount,
+     type='l',
+     col='darkorange1'
+     )
+
+
+title(main = '1880~2014년 인구분포 현황')
+#title(xlab = 'X')
+title(ylab = 'Count')
+
+#범례
+legend(
+  #표시할 좌표 위치 
+  1980, 1000000,
+  c('Female', 'Male'),
+  col=c('darkorange1', 'blueviolet'),
+  pch=c(15,15),
+  #범례가 그래프를 가리면 안됨 그래서 사이즈 조정해야 됨(default = 1)
+  cex = 0.7,
+ 
+)
+```

@@ -1,0 +1,180 @@
+# 주성분 분석
+
+판단하려는 것, 계수(coefficient), 판단값, 대표치값
+
+예) 세계에서 제일 살기 좋은 도시
+
+서로 연관되어 있는 변수들이 관측 되었을때, 이 변수들이 전체적으로 가지고 있는 정보를 최대한 확보하는 적은 수의 변수를 생성하는 방법
+
+### 설문지를 이용한 주성분 분석
+
+```{r}
+data <- read.table('./Data/pasta.txt')
+head(data)
+```
+
+-고객을 상대로 음식 맛 평가 조사 5점 만점
+
+다중 공선성 확인: 너무 상관이 높아서 마치 쌍둥이 데이터 인것 찾기
+
+```{r}
+cor(data)
+```
+
+```{r}
+summary(data)
+```
+
+표준화: 평균을 0으로, 표준편차는 1로 변경
+
+-만약 1\~5~까지 점수만 있는 데이터가 있고, 610까지 점수만 있는 데이터가 있다면 표준화를 해줘야 한다. \>\> 0을 기준으로 -5~-1이 되고
+
+1\~5가 된다.
+
+```{r}
+#scale, log
+help(scale)
+data1 <- scale(data)
+#mean: 다 0으로 변한다.
+summary(data1)
+```
+
+전혀 관련이 없는 데이터를 한 범위 내에 모으는 것을 표준화라고 한다. (완전히 떨어져 있는 데이터들)
+
+```{r}
+data1
+apply(data1, 2, sd)
+```
+
+```{r}
+summary(iris)
+```
+
+```{r}
+data1
+```
+
+```{r}
+help(prcomp)
+p1 <- prcomp(data, scale = T)
+biplot(p1)
+```
+
+Marinara, Alfredo 맛없음
+
+```{r}
+data1
+p1
+```
+
+```{r}
+ramen <- read.table('./Data/ramen.txt', header = T)
+```
+
+```{r}
+head(ramen)
+```
+
+```{r}
+rownames(ramen) <- 
+c(ramen$X)
+```
+
+```{r}
+ramen <- ramen[,2:4]
+```
+
+```{r}
+cor(ramen)
+```
+
+```{r}
+data2 <- scale(ramen)
+summary(data2)
+```
+
+```{r}
+apply(data2, 2, sd)
+```
+
+```{r}
+par(family="AppleGothic")
+p2 <- prcomp(data2, scale = T)
+biplot(p2)
+```
+
+## USArrests
+
+이 데이터 세트에는 1973년 미국 50개주에서 각각 10만명당 폭행, 살인, 강간으로 체포된 통계
+
+도시지역에 살고 있는 인구 비율도 있음
+
+```{r}
+head(USArrests)
+```
+
+상관계수
+
+```{r}
+
+cor(USArrests)
+```
+
+주성분 분석
+
+-column 축소해서 대표값을 만들어야 머신러닝이나 딥러닝에 퍼포먼스를 빠르게 분석 할 수 있다.
+
+```{r}
+
+result <- princomp(USArrests, cor = T)
+summary(result)
+#상관계수값 coefficient value
+```
+
+comp.1: 기울기값
+
+comp1\~comp4다 더해서 점수 구하면 정확도가 높아진다.
+
+```{r}
+biplot(result)
+```
+
+comp1, comp2 가 뭘까?
+
+comp1: 수식이 표시된 것, 주성분 중에 제일 중요한 것
+
+```{r}
+class(result)
+```
+
+```{r}
+result$loadings
+```
+
+1주성분으로 새로운 변수값 생성
+
+```{r}
+score <- 0.536 * USArrests$Murder + 0.583 * USArrests$Assault + 0.278 * USArrests$UrbanPop + 0.543 * USArrests$Rape
+score
+```
+
+states와 주성분으로 데이터프레임
+
+```{r}
+Result <- data.frame(States = rownames(USArrests), Score = score)
+head(Result)
+```
+
+우선순위
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+head(arrange(Result, desc(Score)), 10)
+```
+
+prcomp: 주관적인 데이터
+
+princomp: 객관적인 데이터

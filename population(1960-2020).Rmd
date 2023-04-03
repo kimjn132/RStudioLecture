@@ -1,0 +1,378 @@
+# Metro 데이터 정제
+
+### 데이터 불러오기
+
+```{r}
+pop <- read.csv("./Data/population_1960_2020.csv")
+head(pop)
+tail(pop)
+```
+
+### 그래프 먼저 그리기
+
+```{r}
+metro <- read.csv("./Data/metro_total_1992_2020.csv")
+metro 
+subset(metro, 년도==c(2015,2016,2017,2018,2019))
+```
+
+### 데이터 돌리고 칼럼 이름 년도로 주기
+
+```{r}
+
+metro1 <- as.data.frame(t(metro))
+metro1
+colnames(metro1) <- c(metro1[1,])
+metro2 <- metro1[2:nrow(metro1),]
+rownames(metro2)
+
+```
+
+### 2000년도 전국 인구 분포 비율
+
+```{r}
+year_2000 <- cbind(c(rownames(metro2)), c(round((metro2$`2000`/47732558*100),2)))
+year_2000
+yy <- c(as.numeric(year_2000[,2]))
+yy
+```
+
+### 2000pie chart
+
+```{r}
+par(family='AppleGothic')
+pie(yy,
+    main='2000년 전국 인구 비율 분포 ',
+    labels = paste(year_2000[,1], "\n", year_2000[,2]),
+    cex = 0.3
+    )
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(yy,
+        main='2000년 전국 인구 비율 분포 ',
+        beside = T,
+        names = c(year_2000[,1]),
+        cex.names = 0.2
+        )
+
+```
+
+```{r}
+
+colnames(year_2000) <- c('지역', 'ratio')
+year_2000 <- as.data.frame(year_2000)
+year_2000$ratio <- as.numeric(year_2000$ratio)
+year_2000 <- year_2000[,-c(3:4)]
+sSeoul <- year_2000[c(1,9),]
+outSeoul <- year_2000[-c(1,9),]
+sSeoul
+outSeoul
+
+```
+
+```{r}
+roww <- sum(outSeoul$ratio)
+dd <- '비수도권'
+outSeoul1 <- data.frame(지역=dd, ratio=roww)
+year_200011<-rbind(sSeoul,outSeoul1)
+year_200011[,2]
+```
+
+```{r}
+par(family='AppleGothic')
+pie(year_200011[,2],
+    main='2000년 수도권과 비수도권의 인구 비율 분포 ',
+    labels = paste(year_200011[,1], "\n", year_200011[,2]),
+    cex = 0.8
+    )
+```
+
+### 2018년도 전국 인구 분포 비율
+
+```{r}
+metro2 <- metro1[-1,]
+metro2 <-metro2[-1,]
+as.data.frame(metro2$`2018`)
+year_2018
+year_2018 <- cbind(c(rownames(metro2)), c(round((metro2$`2018`/51826059*100),2)))
+xx <- c(as.numeric(year_2018[,2]))
+xx
+paste(year_2018[,2])
+length(year_2018[,2])
+c(year_2018[,1])
+```
+
+```{r}
+library(plotrix)
+```
+
+### 2018년 pie chart
+
+```{r}
+par(family='AppleGothic')
+pie(xx,
+    main='2018년 전국 인구 비율 분포 ',
+    labels = paste(year_2018[,1], "\n", year_2018[,2]),
+    cex = 0.3
+    )
+```
+
+### 2018년 막대차트
+
+```{r}
+par(family='AppleGothic')
+barplot(xx,
+        main='2018년 전국 인구 비율 분포 ',
+        beside = T,
+        names = c(year_2018[,1]),
+        cex.names = 0.2
+        )
+
+```
+
+```{r}
+colnames(year_2018) <- c('지역', 'ratio')
+year_2018 <- as.data.frame(year_2018)
+year_2018$ratio <- as.numeric(year_2018$ratio)
+year_2018 <- year_2018[,-c(3:4)]
+sSeoul2018 <- year_2018[c(1,9),]
+outSeoul2018 <- year_2018[-c(1,9),]
+sSeoul2018
+outSeoul2018
+```
+
+### 수도권과 비수도권 나누기
+
+```{r}
+roww2018 <- sum(outSeoul2018$ratio)
+dd2018 <- '비수도권'
+outSeoul2018 <- data.frame(지역=dd2018, ratio=roww2018)
+year_201811<-rbind(sSeoul2018,outSeoul2018)
+year_201811[,2]
+```
+
+```{r}
+par(family='AppleGothic')
+pie(year_201811[,2],
+    main='2018년 수도권과 비수도권의 인구 비율 분포 ',
+    labels = paste(year_201811[,1], "\n", year_201811[,2]),
+    cex = 0.8
+    )
+```
+
+```{r}
+seoul <- metro1[2,]
+seoul
+```
+
+```{r}
+
+```
+
+```{r}
+nonSeoul <- metro1[3:nrow(metro1),]
+nonSeoul
+sum(nonSeoul)
+```
+
+```{r}
+cor(metro$부산광역시,metro$서울특별시)
+```
+
+```{r}
+par(family='AppleGothic')
+plot(
+  metro$경기도,metro$서울특별시,
+  type='l',
+  #ylim = c(9000000,9000000)
+)
+```
+
+```{r}
+par(family='AppleGothic')
+plot(
+  metro$경기도,metro$부산광역시,
+  type='l',
+  #ylim = c(9000000,9000000)
+)
+```
+
+```{r}
+abc <- c(as.matrix(metro1[2,
+                          ]))
+abc
+def <- c(as.matrix(metro1[3,]))
+
+```
+
+```{r}
+par(family='AppleGothic')
+plot(c(as.matrix(metro1[2,])),
+     type = 'l',
+    
+     ylim=c(0,20000000),
+     #x, y축 프레임 없애기
+     axes = F,
+     #x, y축 라벨 없애기
+     ann = F
+     )
+axis(1,
+     at = 1:ncol(metro1),
+     lab = c(colnames(metro1)),
+     cex.axis = 0.5
+     )
+axis(2,
+      
+     cex.axis = 0.3
+     )
+lines(c(as.matrix(metro1[3,])),
+      type='l',
+      #pch=22,
+      col='green',
+      #lty=2
+      )
+
+lines(c(as.matrix(metro1[4,])),
+      type='l',
+      col='red',
+      )
+
+lines(c(as.matrix(metro1[5,])),
+      type='l',
+      col='orange',
+      )
+lines(c(as.matrix(metro1[6,])),
+      type='l',
+      col='blue',
+      )
+
+
+
+legend(
+  #표시할 좌표 위치 
+  3,20000000,
+  c(rownames(metro1[c(2:6),])),
+  col=c('black', 'green', 'red', 'orange', 'blue'),
+  #pch default = 21
+  pch = c(21, 22, 22,22,22),
+  lty = c(1,2,2,2,2),
+  #범례가 그래프를 가리면 안됨 그래서 사이즈 조정해야 됨(default = 1)
+  cex = 0.7,
+ 
+)
+
+```
+
+```{r}
+par(family="AppleGothic")
+pie(
+  
+)
+```
+
+```{r}
+cor(pop$남자, pop$여자)
+cor(pop$총인구, pop$남자)
+cor(pop$총인구, pop$여자)
+```
+
+```{r}
+par(family="AppleGothic")
+plot(pop$남자, pop$여자,
+     type='l',
+     #ylim = c(40000000,60000000),
+     xlim = c(12000000,40000000)
+     )
+lines(pop$총인구, pop$남자,
+     type='l',
+     col='red'
+     )
+lines(pop$총인구, pop$여자,
+     type='l',
+     col='blue'
+     )
+```
+
+```{r}
+
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(pop),
+        col=rainbow(length(pop$총인구)),
+        beside=T)
+```
+
+```{r}
+#pop_move <- read.csv("./Data/tion_move.txt", fill = T)
+pop_move <- read.csv("./Data/13.csv")
+head(pop_move, 10)
+```
+
+```{r}
+str(pop_move)
+```
+
+```{r}
+pop_in <- subset(pop_move, 항목=='순이동 (명)')
+pop_in
+pop_in1 <- as.data.frame(t(pop_in))[-c(1:3),-3]
+pop_in2 <- as.data.frame(t(pop_in))[-c(2:3),-3]
+pop_in1
+```
+
+```{r}
+colnames(pop_in1) <- c(pop_in2[1,])
+pop_in1
+```
+
+```{r}
+library(stringr)
+```
+
+-제거
+
+```{r}
+for(i in 1:ncol(pop_in1)){
+  pop_in1[,i] <- str_replace_all(pop_in1[,i],'-','0')
+}
+pop_in1
+```
+
+데이터 숫자로 변경
+
+```{r}
+for(i in 1:ncol(pop_in1)){
+  pop_in1[,i] <- as.numeric(pop_in1[,i])
+}
+pop_in1
+```
+
+```{r}
+c(pop_in1[1,1:10])
+```
+
+```{r}
+par(family='AppleGothic')
+plot(as.matrix.data.frame(pop_in1[1,1:10]),
+     ylim=c(0,1200000),
+     type='l',
+     #axes = F,
+     #x, y축 라벨 없애기
+     #ann = F,
+     )
+
+axis(1, 
+     #그래프 각 축 번호에 맞게 
+     at = 1:21,
+     lab = colnames(pop_in1),
+     cex.axis = 0.5
+     )
+```
+
+```{r}
+cor(metro$서울특별시,)
+```

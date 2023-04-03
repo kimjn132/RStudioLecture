@@ -1,0 +1,97 @@
+# 인공신경망을 이용한 평균 예측율 구하기
+
+```{r}
+library(nnet)
+library(caret)
+library(party)
+```
+
+```{r}
+#set.seed() -> 수업용
+nnetFun <- function(n){
+  for (i in 1:n) {
+    if(i == 1){
+      resultVec = c()
+    }
+    # species마다 70퍼센트 뽑겠다.
+    samp <- createDataPartition(iris$Species, p=0.7, list = F)
+    data.train <- iris[samp,]
+    data.test <- iris[-samp,]
+    x <- subset(data.test, select=-Species)
+    y <- data.test$Species
+    model.nnet <- nnet(Species ~ ., data=data.train, size = 3)
+    pred.nnet <- predict(model.nnet, x, type='class')
+    resultVec = append(resultVec, mean(pred.nnet == y))
+  }
+  cat('-------------------------------\n')
+  cat('예측율 \n')
+  cat(resultVec, '\n')
+  cat('-------------------------------\n')
+  cat('평균예측율:', mean(resultVec), '\n')
+  cat('-------------------------------\n')
+}
+```
+
+```{r}
+nnetFun(5)
+```
+
+## randomForest의 평균 예측율 함수 구하기
+
+```{r}
+nnetFunR <- function(n){
+  for (i in 1:n) {
+    if(i == 1){
+      resultVecR = c()
+    }
+    sampR <- createDataPartition(iris$Species, p=0.7, list = F)
+    data.trainR <- iris[sampR,]
+    data.testR <- iris[-sampR,]
+    xR <- subset(data.testR, select=-Species)
+    yR <- data.testR$Species
+    model.nnetR <- randomForest(Species ~ ., data=data.trainR, ntree = 1000)
+    pred.nnetR <- predict(model.nnetR, x)
+    resultVecR = append(resultVecR, mean(pred.nnetR == yR))
+  }
+  cat('-------------------------------\n')
+  cat('예측율 \n')
+  cat(resultVecR, '\n')
+  cat('-------------------------------\n')
+  cat('평균예측율:', mean(resultVecR), '\n')
+  cat('-------------------------------\n')
+}
+```
+
+```{r}
+nnetFunR(5)
+```
+
+## svm의 평균 예측율 함수 구하기
+
+```{r}
+nnetFunS <- function(n){
+  for (i in 1:n) {
+    if(i == 1){
+      resultVecS = c()
+    }
+    sampS <- createDataPartition(iris$Species, p=0.7, list = F)
+    data.trainS <- iris[sampS,]
+    data.testS <- iris[-sampS,]
+    xS <- subset(data.testS, select=-Species)
+    yS <- data.testS$Species
+    model.nnetS <- svm(Species ~ ., data=data.trainS)
+    pred.nnetS <- predict(model.nnetS, x)
+    resultVecS = append(resultVecS, mean(pred.nnetS == yS))
+  }
+  cat('-------------------------------\n')
+  cat('예측율 \n')
+  cat(resultVecS, '\n')
+  cat('-------------------------------\n')
+  cat('평균예측율:', mean(resultVecS), '\n')
+  cat('-------------------------------\n')
+}
+```
+
+```{r}
+nnetFunS(5)
+```

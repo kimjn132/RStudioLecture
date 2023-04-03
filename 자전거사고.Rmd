@@ -1,0 +1,442 @@
+# 자전거 도로 보유 개수에 따른 자전거 교통사고 상관관계
+
+### 데이터 가져오기
+
+```{r}
+bAccident <- read.csv("./Data/bicycleAccident.csv", fileEncoding = "utf8")
+```
+
+### 결측치 확인
+
+```{r}
+sum(is.na(bAccident))
+```
+
+```{r}
+str(bAccident)
+```
+
+### 불필요한 데이터 없애기(2017-2021년)
+
+```{r}
+bAccident <- bAccident[,-c(3:39)]
+```
+
+```{r}
+bAccident
+bAccident <- bAccident[-c(1:3),c('자치구별.2.','X2017','X2018','X2019','X2020','X2021')]
+```
+
+### 2017년 구별 자전거 사고
+
+```{r}
+bAccident[,c(1:2)]
+bAccident1 <- as.data.frame(t(bAccident[,c(1:2)]))
+bAccident1
+```
+
+```{r}
+colnames(bAccident1) <- c(bAccident1[1,])
+bAccident1 <- bAccident1[2,]
+```
+
+```{r}
+tt <- t(as.data.frame(as.numeric(bAccident1)))
+colnames(tt) <- colnames(bAccident1)
+bAccident11 <- as.data.frame(tt)
+```
+
+```{r}
+bAccident2 = c()
+for(i in seq(1, 50, 2)){
+  
+  bAccident2 <- cbind(bAccident2, bAccident11[,i])
+}
+
+```
+
+```{r}
+bAccident3 = c()
+for(i in seq(2, 50, 2)){
+  
+  bAccident3 <- cbind(bAccident3, bAccident11[,i])
+}
+```
+
+```{r}
+bAccident11
+bAccident11[,c(1,3,5)]
+bAccident2017 <- as.data.frame(rbind(bAccident2,
+bAccident3))
+```
+
+```{r}
+rownames(bAccident2017) <- c("가해자","피해자")
+
+colnames(bAccident2017) <- c(colnames(bAccident11[seq(1,50,2)]))
+bAccident2017
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(
+  as.matrix(bAccident2017),
+  ylim = c(0,500),
+  
+  col = c('red', 'skyblue'),
+  cex.names = 0.6,
+  cex.axis = 1.0,
+  main = "2017년 서울시 구별 자전거 사고 수 현황"
+ 
+)
+
+legend(1,400,
+       rownames(bAccident2017),
+       pch = c(15, 15),
+       cex = 1.5,
+         col = c('red', 'skyblue'),
+)
+       
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(
+  as.matrix(bAccident2017[,1:12]),
+   ylim = c(0,400),
+  col = c('red', 'skyblue'),
+  legend.text = T,
+  cex.names = 0.5,
+
+)
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(
+  as.matrix(bAccident2017[,13:25]),
+   ylim = c(0,600),
+  col = c('red', 'skyblue'),
+  legend.text = T,
+  cex.names = 0.5
+)
+```
+
+# 자전거 도로 개수
+
+### 데이터 가져오기
+
+```{r}
+bicycleNum <- read.csv("./Data/bicycleNum.csv", fileEncoding = "utf8")
+```
+
+### 불필요한 데이터 제거(2017-2021년, 자전거 전체 개수only)
+
+```{r}
+
+bicycleNum <- bicycleNum[,-c(1,2)]
+bicycleNum
+```
+
+```{r}
+
+bicycleNum <- bicycleNum[-c(1:5),c('지역별.3.','X2017','X2018','X2019','X2020','X2021')]
+```
+
+```{r}
+bicycleNum <- bicycleNum[-c(26:29),]
+bicycleNumSong <- bicycleNum[24,-1]
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(bicycleNumSong),
+        ylim = c(0,250),
+        names = c('2017','2018','2019','2020','2021'),
+        col='coral',
+        main = '송파구 자전거 도로 설치 수 현황'
+        )
+```
+
+# 대기질 관련 데이터
+
+```{r}
+carbon <- read.csv("./Data/carbondioxide1.csv", fileEncoding = 'utf8')
+```
+
+## 불필요한 데이터 없애기
+
+```{r}
+carbon <- carbon[,c("측정년도", "측정소명", "이산화질소농도.ppm.")]
+```
+
+```{r}
+carbonT <- as.data.frame(t(carbon))
+carbonT
+```
+
+```{r}
+colnames(carbonT) <- c(carbon[,1])
+carbonT[2:3,]
+carbon
+```
+
+## 결측치 제거
+
+```{r}
+sum(is.na(carbon))
+```
+
+```{r}
+carbon<-na.omit(carbon)
+sum(is.na(carbon))
+```
+
+### 불필요한 데이터 제거(2017-2021, 필요한 연도만 남기기)
+
+```{r}
+carbon <- carbon[51:284,]
+carbon
+```
+
+# 정제된 데이터 모아보기
+
+```{r}
+bAccidentSong <- bAccident[47:48,-1] #가해자수, 피해자수
+bicycleNumSong <- bicycleNum[24,-1]
+carbon
+```
+
+```{r}
+
+rownames(bAccidentSong) <- c('가해자수', '피해자수')
+bAccidentSong
+bicycleNumSong
+```
+
+## 
+
+```{r}
+bAccidentSong
+```
+
+## 송파구 자전거 사고 현황 막대그래프
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(bAccidentSong),
+        ylim = c(0,700),
+        legend.text = T,
+        main = '2017-2021년 송파구 자전거 사고 수 현황',
+        col = c('red', 'skyblue'),
+        cex.axis = 0.8,
+        names = c('2017','2018','2019','2020','2021')
+        )
+```
+
+## 송파구 배출가스 농도
+
+```{r}
+carbonSong <- subset(carbon, 측정소명=='송파구')
+
+carbonSong
+```
+
+```{r}
+carbonSong <- as.data.frame(t(carbonSong))
+carbonSong
+
+```
+
+```{r}
+colnames(carbonSong) <- c(carbonSong[1,])
+carbonSong <- carbonSong[3,]
+```
+
+```{r}
+carbon
+```
+
+### 송파구 이산화질소농도 막대그래프
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(carbonSong),
+        ylim = c(0,0.05),
+        col='orange'
+        )
+```
+
+```{r}
+par(family='AppleGothic')
+plot(as.matrix(t(carbonSong)),
+     type = 'l',
+     col = "orange",
+     ylim = c(0,0.05),
+     #x, y축 프레임 없애기
+     axes = F,
+     #x, y축 라벨 없애기
+     ann = F,
+     )
+title(main = '송파구 이산화질소농도')
+#1 = x축 
+axis(1, 
+     #그래프 각 축 번호에 맞게 
+     at = 1:5,
+     lab = c('2017', '2018', '2019', '2020', '2021'),
+     cex.axis = 0.8
+     )
+
+#2=y축
+axis(2,
+     ylim = c(0,0.05),
+     cex.axis = 0.8
+     )
+```
+
+```{r}
+str(bAccident)
+str(bicycleNum)
+str(carbon)
+```
+
+### plot
+
+```{r}
+plot(bAccident)
+plot(bicycleNum)
+plot(carbonSong)
+```
+
+```{r}
+bAccidentSong
+bicycleNumSong
+carbonSong
+#최대값과 최솟값을 나타내는 인덱스값 위치 
+#which.max(bicycleNum[,6]) #24행 송파구
+#which.min(bicycleNum[,6]) #9행 강북구
+```
+
+## 대기 유해물질 (2017-2021)
+
+```{r}
+carbon2 <- read.csv("./Data/carbondioxide1.csv", fileEncoding = 'utf8')
+carbon2 <- carbon2[51:285,]
+
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+carbon2Song <- subset(carbon2, 측정소명=='송파구')
+carbon2Song <- arrange(carbon2Song, 측정년도)
+
+```
+
+### 대기질 막대그래프
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(t(carbon2Song[,c(3:4,6)])),
+        beside = T,
+        col = c('red', 'skyblue', 'orange'),
+        ylim = c(0,0.07),
+        names = c(carbon2Song$측정년도),
+        cex.names = 0.5,
+        cex.axis = 0.7,
+        legend.text = T,
+        main = '송파구 대기오염 수치 정보'
+        )
+```
+
+# 자전거 시설 활성화
+
+## 송파구 따릉이 설치 현황 (2017-2021)
+
+```{r}
+seoulBicycle <- read.csv("./Data/seoulBicycle.csv", fileEncoding = "utf8")
+```
+
+```{r}
+seoulBicycle <- seoulBicycle[-c(1:4),]
+seoulBicycle
+```
+
+```{r}
+
+seoulBicycleSong <- subset(seoulBicycle, 소재지.위치.=='송파구')[1:206,-c(1,3,4,5)]
+seoulBicycleSong
+```
+
+```{r}
+seoulBicycleSong$설치.시기 <- substring(seoulBicycleSong$설치.시기, 1, 4)
+```
+
+```{r}
+#seoulBicycleSong <- seoulBicycleSong[,-2]
+subset(seoulBicycleSong, 설치.시기=='2017')
+subset(seoulBicycleSong, 설치.시기=='2018')
+#subset(seoulBicycleSong, 설치.시기=='2019')#데이터 없음
+subset(seoulBicycleSong, 설치.시기=='2020')
+subset(seoulBicycleSong, 설치.시기=='2021')
+```
+
+### 결측치 확인
+
+```{r}
+sum(is.na(seoulBicycleSong))
+```
+
+```{r}
+library(stringr)
+```
+
+### 결측치 제거 및 숫자 데이터 chr -- \> numeric으로 변환
+
+```{r}
+seoulBicycleSong$설치형태 <- as.numeric(seoulBicycleSong$설치형태)
+seoulBicycleSong$X.3 <- as.numeric(seoulBicycleSong$X.3)
+seoulBicycleSong
+```
+
+```{r}
+seoulBicycleSong$X.3 <- as.numeric(str_replace_na(seoulBicycleSong$X.3, replacement = '0'))
+seoulBicycleSong$설치형태 <- as.numeric(str_replace_na(seoulBicycleSong$설치형태, replacement = '0'))
+seoulBicycleSong
+```
+
+### 송파구 따릉이 개수 연도별로 더하기
+
+```{r}
+seoulBicycleSong <- aggregate(cbind(설치형태, X.3)~설치.시기, seoulBicycleSong, sum)
+seoulBicycleSong
+```
+
+```{r}
+#누적합계
+publicBicycle <- as.data.frame(t(as.data.frame(cumsum(rowSums(seoulBicycleSong[,2:3])))))
+```
+
+```{r}
+rownames(publicBicycle) <- 'publicBicycle'
+colnames(publicBicycle) <- c('2017', '2018', '2020', '2021')
+publicBicycle
+```
+
+### 송파구 따릉이 설치 수 누적 그래프
+
+```{r}
+par(family='AppleGothic')
+barplot(as.matrix(publicBicycle),
+        #beside = T,
+        col = 'aquamarine2',
+        ylim = c(0,3000),
+        cex.axis = 0.7,
+        main = '2017-2021년 송파구 따릉이 설치 누적 그래프'
+        #legend.text = T
+        )
+```
+
+# 

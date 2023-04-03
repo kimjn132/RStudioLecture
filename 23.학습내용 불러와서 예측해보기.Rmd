@@ -1,0 +1,20 @@
+## 학습내용 불러와서 예측해보기
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+rf <- readRDS('./Data/randomForest_iris.rds')
+```
+
+```{r}
+predict(rf, list(Sepal.Length=5.4, Sepal.Width=3.9,
+                 Petal.Length=1.7, Petal.Width=0.5))
+```
+
+\>\>이 내용이 RServer에 들어감
+
+\>\>이 소스가 JSP에 들어감
+
+-JSP에서 이 내용 물어보면, RServer에서 돌려서 답을 준다.

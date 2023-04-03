@@ -1,0 +1,667 @@
+```{r}
+dementia <- read.csv('./Data/alzheimer.csv', header=T)
+
+```
+
+```{r}
+
+```
+
+```{r}
+dementiaPlus <- read.csv('./Data/addData.csv', header=T)
+dementiaPlus <- dementiaPlus[,-1]
+```
+
+```{r}
+head(dementia)
+```
+
+```{r}
+str(dementia)
+```
+
+Group: Converted / Demented / Nondemented (경도 / 치매 / 치매 아님)
+
+M.F: 성별
+
+Age: 나이
+
+EDUC: 교육 수준
+
+SES: 경제 수준 1(high) \~ 5(low)
+
+MMSE: Mini-Mental State Examination Score (0= worst, to 30 = best)
+
+CDR: Clinical Dementia Rating (0 = no dementia, 0.5 = very mild AD, 1 = mild AD, 2 = moderate AD)
+
+eTIV(estimate Total Intracranial volume): 뇌크기
+
+nWBV(Normalized whole-brain volume): 대뇌 크기
+
+ASF: Atlas scaling factor
+
+## 결측치 및 빈공간 데이터 삭제
+
+```{r}
+library(stringr)
+```
+
+```{r}
+str(dementia)
+```
+
+```{r}
+sum(is.na(dementia))
+```
+
+```{r}
+for(i in 1:10){
+  cat('column name:', colnames(dementia)[i])
+  print(table(dementia[,i]))
+  cat('--------------------------\n')
+}
+```
+
+```{r}
+sum(is.na(dementia))
+```
+
+\>결측치 수: 2개
+
+```{r}
+colSums(is.na(dementia))
+```
+
+> 어떤 컬럼에 결측치 있는 지 확인!
+
+```{r}
+dementia1 <- subset(dementia, !is.na(dementia$MMSE))
+```
+
+> 결측치 제거
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+arrange(dementia1, Group)
+```
+
+```{r}
+paste(
+  nrow((subset(dementia1, Group == 'Converted'))),
+  nrow((subset(dementia1, Group == 'Demented'))),
+  nrow((subset(dementia1, Group == 'Nondemented'))),
+  nrow((subset(dementia1, Group == 'Converted'))) / nrow(dementia1),
+  nrow((subset(dementia1, Group == 'Demented'))) / nrow(dementia1),
+  nrow((subset(dementia1, Group == 'Nondemented'))) / nrow(dementia1))
+
+```
+
+```{r}
+dementia1 <- subset(dementia, !dementia1$SES=='Qh')
+```
+
+```{r}
+sum(dementia1[,5] == '')
+sum(is.na(dementia1[,6]))
+```
+
+```{r}
+dementia1 <- subset(dementia1, !dementia1[,5] == '')
+```
+
+```{r}
+subset(dementia1$SES, dementia1$SES == '')
+```
+
+```{r}
+sum(is.na(subset(dementia1, !is.na(dementia1[,6]))))
+```
+
+```{r}
+sum(is.na(dementia1))
+```
+
+```{r}
+sum(is.na(dementia1))
+```
+
+```{r}
+str(dementia1[,-1])
+```
+
+```{r}
+dementia1 <- dementia1[, -1]
+
+```
+
+```{r}
+dementia1
+```
+
+```{r}
+dementia1$SexCode[dementia1$M.F == 'F'] <- 0
+dementia1$SexCode[dementia1$M.F == 'M'] <- 1
+```
+
+```{r}
+dementia1 <- dementia1[,-1]
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+as.numeric(dementia1$SES)
+```
+
+```{r}
+dementia1$SES <- as.numeric(dementia1$SES)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+
+```
+
+### CDR factor로 변환
+
+```{r}
+table(dementia1$CDR)
+```
+
+```{r}
+library(stringr)
+```
+
+```{r}
+#subset(dementia1, dementia1$CDR == 2)
+
+```
+
+```{r}
+dementia1$CDR <- str_replace(dementia1$CDR, '2', '1')
+```
+
+```{r}
+table(dementia1$CDR)
+```
+
+```{r}
+dementia1$CDR <- as.numeric(dementia1$CDR)
+```
+
+```{r}
+dementia1$CDR <- as.factor(dementia1$CDR)
+```
+
+```{r}
+str(dementia1)
+```
+
+## Group으로 정렬하기
+
+```{r}
+dementia1 <- arrange(dementia1, Group)
+```
+
+```{r}
+str(dementia1)
+```
+
+### Group factor로 변환
+
+```{r}
+dementia1$Group <- factor(dementia1$Group)
+```
+
+### 성별, hot-key로 변환
+
+```{r}
+#train_df_T$SexCode[train_df_T$Sex == 'male'] <- 0
+dementia1$SexCode[dementia1$M.F == 'F'] <- 0
+
+```
+
+```{r}
+dementia1$SexCode[dementia1$M.F == 'M'] <- 1
+```
+
+```{r}
+dementia1_S <- dementia1[,-2]
+```
+
+```{r}
+str(dementia1_S[,-4])
+```
+
+## SES(사회적 위치 제거한 rf)
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(dementia1_S[,-4]$Group, p=0.7, list = F)
+data.train <- dementia1_S[,-4][samp,]
+data.test <- dementia1_S[,-4][-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -Group)
+y <- data.test$Group
+x
+y
+```
+
+```{r}
+rf <- randomForest(Group ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### 확률은 91.81%, 그런데 Converted 가 정확성이 너무 떨어진다.
+
+Converted는 에러 확률이 84.61%
+
+그 외 demented, nondemented는 에러가 거의 없다. 0% 수준.
+
+## SES 사회적 위치 포함 randomforest
+
+```{r}
+dementia_SS <- subset(dementia1_S, !dementia1_S$SES=='')
+```
+
+```{r}
+dementia_SS$SES <- factor(dementia_SS$SES)
+```
+
+```{r}
+str(dementia_SS)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(dementia_SS$Group, p=0.7, list = F)
+data.train <- dementia_SS[samp,]
+data.test <- dementia_SS[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -Group)
+y <- data.test$Group
+x
+y
+```
+
+```{r}
+rf <- randomForest(Group ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+사회적 위치. factor로 바꾼 데이터는 90.47%
+
+```{r}
+str(dementia_SS)
+```
+
+```{r}
+dementia_SS$SES <- as.numeric(dementia_SS$SES)
+```
+
+```{r}
+dementia_SS
+```
+
+```{r}
+str(dementia_SS)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(dementia_SS$Group, p=0.7, list = F)
+data.train <- dementia_SS[samp,]
+data.test <- dementia_SS[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -Group)
+y <- data.test$Group
+x
+y
+```
+
+```{r}
+rf <- randomForest(Group ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+똑같이 90.47
+
+# 성별에 따른 치매 구분
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+dementia1$M.F <- factor(dementia1$M.F)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+dementia1$SES <- as.numeric(dementia1$SES)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+plot(dementia1)
+```
+
+```{r}
+summary(dementia1)
+```
+
+-   귀무가설: F와 M은 치매와 연관이 없다.
+
+-   대립가설: F와 M은 치매와 연관이 있다.
+
+```{r}
+subset(dementia1[,c(1:2)], dementia1$M.F == 'F')
+subset(dementia1[,c(1:2)], dementia1$M.F == 'M')
+```
+
+### 성별에 따론 Converted 수
+
+```{r}
+#M: Converted & F: Converted
+cm <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Converted'&dementia1$M.F == 'M'))
+cf <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Converted'&dementia1$M.F == 'F'))
+```
+
+### 성별에 따론 Demented 수
+
+```{r}
+dm <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Demented'&dementia1$M.F == 'M'))
+df <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Demented'&dementia1$M.F == 'F'))
+```
+
+### 성별에 따론 Nondemented 수
+
+```{r}
+nm <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Nondemented'&dementia1$M.F == 'M'))
+nf <- nrow(subset(dementia1[,c(1:2)], dementia1$Group == 'Nondemented'&dementia1$M.F == 'F'))
+```
+
+```{r}
+genderCount <-rbind(c(cm, cf), c(dm, df), c(nm, nf))
+```
+
+```{r}
+colnames(genderCount) <- c('male', 'female')
+```
+
+```{r}
+rownames(genderCount) <- c('Converted', 'Demented', 'Nondemented')
+genderCount
+```
+
+```{r}
+chisq.test(genderCount)
+```
+
+결론: F와 M은 치매와 연관이 없다. 왜냐하면 p-value \>0.05를 훨씬 뛰어넘는다.
+
+```{r}
+boxplot(dementia1$Age)
+```
+
+```{r}
+dementia_SS$Group == 'Converted'
+```
+
+```{r}
+#train_df_T$Embarked_C = train_df_T$Embarked == 'C'
+#train_df_T$Embarked_S = train_df_T$Embarked == 'S'
+#train_df_T$Embarked_Q = train_df_T$Embarked == 'Q'
+#head(train_df_T[c('Embarked', 'Embarked_C', 'Embarked_S', 'Embarked_Q')])
+```
+
+```{r}
+dementia_SS$Group == 'Converted'
+```
+
+```{r}
+mr3 <- data.frame(Group = dementia1$Group)
+head(mr3)
+```
+
+```{r}
+mr3$Group1[mr3$Group == 'Converted'] <- 0
+mr3$Group1[mr3$Group == 'Demented'] <- 1
+mr3$Group1[mr3$Group == 'Nondemented'] <- 2
+
+```
+
+```{r}
+#dementia1$SexCode[dementia1$M.F == 'F'] <- 0
+mr3
+mr33 <- cbind(mr3, dementia1)
+```
+
+```{r}
+mr33 <- mr33[,-c(1,3)]
+```
+
+```{r}
+str(mr33)
+```
+
+```{r}
+subset(mr33, mr33$M.F == "F")
+subset(mr33, mr33$M.F == "M")
+mr33$M.F1[mr33$M.F == 'F'] <- 0
+mr33$M.F1[mr33$M.F == 'M'] <- 1
+```
+
+```{r}
+mr33 <- mr33[,-2]
+```
+
+```{r}
+str(mr33)
+colSums(is.na(mr33))
+```
+
+```{r}
+mr33[is.na(mr33)] <- 0
+```
+
+```{r}
+colSums(is.na(mr33))
+```
+
+```{r}
+cor(mr33$Group1, mr33$Age)
+cor(mr33$Group1, mr33$EDUC)
+cor(mr33$Group1, mr33$SES)
+cor(mr33$Group1, mr33$MMSE)
+cor(mr33$Group1, mr33$CDR)
+cor(mr33$Group1, mr33$eTIV)
+cor(mr33$Group1, mr33$nWBV)
+cor(mr33$Group1, mr33$ASF)
+cor(mr33$Group1, mr33$SexCode)
+cor(mr33$Group1, mr33$M.F1)
+```
+
+```{r}
+a <- lm(mr33$Group1 ~ mr33$CDR)
+b <- lm(mr33$Group1 ~ mr33$MMSE)
+```
+
+```{r}
+summary(b)
+```
+
+```{r}
+plot(mr33$Group1 ~ mr33$CDR)
+plot(mr33$Group1 ~ mr33$MMSE)
+```
+
+```{r}
+str(dementia_SS)
+```
+
+```{r}
+arrange(dementia, desc(dementia$MMSE))
+```
+
+```{r}
+boxplot(dementia1$SES)
+```
+
+```{r}
+boxplot(dementia1$EDUC)
+```
+
+```{r}
+boxplot(dementia1$CDR)
+```
+
+```{r}
+boxplot(dementia1$M.F)
+```
+
+```{r}
+table(dementia1$EDUC)
+```
+
+```{r}
+table(dementia$Group, dementia$MMSE)
+```
+
+```{r}
+table(dementia$Group, dementia$EDUC)
+```
+
+```{r}
+table(dementia$Group)
+```
+
+```{r}
+head(arrange(dementia, dementia$Age))
+```
+
+```{r}
+table(dementia$CDR)
+```
+
+```{r}
+str(dementia1_S[,-1])
+```
+
+```{r}
+
+```
+
+# 일반 보여주기용
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(dementia1$CDR, p=0.7, list = F)
+data.train <- dementia1[samp,]
+data.test <- dementia1[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+x
+y
+```
+
+```{r}
+rf <- randomForest(CDR ~ EDUC+SES+MMSE+eTIV+SexCode, data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+```{r}
+dementia1
+```
+
+# data 합치기
+
+```{r}
+dementia1
+```

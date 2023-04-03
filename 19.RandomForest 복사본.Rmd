@@ -1,0 +1,50 @@
+# RandomForest
+
+-대다수의 머신 러닝이랑 잘 맞음
+
+-ctree를 여러 개 돌리는게 randomforest다.
+
+-앙상블 기법
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(iris$Species, p=0.7, list = F)
+data.train <- iris[samp,]
+data.test <- iris[-samp,]
+samp
+data.train
+data.test
+```
+
+\>\>예측력 확인
+
+```{r}
+x <- subset(data.test, select = -Species)
+y <- data.test$Species
+```
+
+```{r}
+#ntree는 많이 돌릴수록 정확해진다. 적어도 100번 이상 돌리는 게 좋다.
+rf <- randomForest(Species ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+```{r}
+str(iris)
+```
+
+### 

@@ -1,0 +1,13 @@
+# 교통사고 예측하기 (회귀식과 RandomForest 예측 비교)
+
+```{r}
+seoul <- read.csv('./Data/newSeoul2019.csv')
+head(seoul)
+```
+
+종로구 데이터셋 만들기
+
+```{r}
+JongRo <- subset(seoul, 자치구명=='종로구')
+JongRo
+```

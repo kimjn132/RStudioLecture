@@ -1,0 +1,45 @@
+# 의사결정 나무 (Decision Tree)
+
+스무고개 느낌, 알고리즘
+
+```{r}
+library(party)
+```
+
+```{r}
+library(caret)
+```
+
+sampling
+
+```{r}
+set.seed(1234)
+#species 중 70퍼센트
+samp <- createDataPartition(iris$Species, p=0.7, list = F)
+samp
+```
+
+```{r}
+data.train <- iris[samp,]
+data.test <- iris[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-Species)
+y <- data.test$Species
+```
+
+```{r}
+#의사결정나무, 데이터마다 잘 맞는 함수가 있다. iris는 ctree가 잘 맞는 데이터다.> 인공신경망이 더 잘 맞는다.(정확도를 보고 파악)
+iris_tree <- ctree(Species ~ ., data=data.train)
+```
+
+```{r}
+pred <- predict(iris_tree, x)
+head(pred)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```

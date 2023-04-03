@@ -1,0 +1,139 @@
+# 1. Survived와 Death의 비중을 동일하게 하여 예측력 구해보기
+
+## titanic table 가져오기
+
+```{r}
+train_df <- read.csv('./Data/Titanic_train.csv')
+head(train_df)
+```
+
+```{r}
+tail(train_df)
+```
+
+```{r}
+plot(train_df)
+```
+
+```{r}
+str(train_df)
+```
+
+```{r}
+summary(train_df)
+```
+
+## 컬럼별 결측치 확인 후 결측치 제거
+
+```{r}
+colSums(is.na(train_df))
+```
+
+```{r}
+subset(train_df, is.na(Age))
+```
+
+```{r}
+train_df <- na.omit(train_df)
+```
+
+```{r}
+train_df
+```
+
+## 사망자수와 생존자 수 확인
+
+```{r}
+#사망(0)
+nrow(subset(train_df, train_df$Survived == 0))
+#생존(1)
+nrow(subset(train_df, train_df$Survived == 1))
+```
+
+## 더 적은 생존자수 기준으로 맞춰서 분석한다.
+
+### 생존자수와 사망자수 rownames 번호 추출하기
+
+```{r}
+death <- subset(train_df, train_df$Survived == 0)
+deathId <- rownames(death)
+alive <- subset(train_df, train_df$Survived == 1)
+aliveId <- rownames(alive)
+```
+
+```{r}
+deathId
+aliveId
+```
+
+### sample이용하여 사망자수 290명 랜덤 추출하기
+
+```{r}
+deathId <-sort(sample(deathId, 290))
+deathId
+aliveId
+```
+
+### 랜덤 추출한 행번호로 테이블 전체 맞춰주기 (생존자 vs 사망자)
+
+```{r}
+train_df[deathId,]
+train_df[aliveId,]
+```
+
+### 290명으로 맞춘 각각의 데이터프레임 합치기
+
+```{r}
+train_df_S <- rbind(train_df[deathId,], train_df[aliveId,])
+train_df_S
+```
+
+# 분석시작
+
+## randomForest
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(train_df_S$Survived, p=0.7, list = F)
+data.train <- train_df_S[samp,]
+data.test <- train_df_S[-samp,]
+samp
+data.train
+data.test
+```
+
+### 예측력 확인
+
+```{r}
+x <- subset(data.test, select = -Survived)
+y <- data.test$Survived
+x
+y
+```
+
+```{r}
+rf <- randomForest(Survived ~ ., data = data.train, ntree = 1000)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+head(pred)
+```
+
+```{r}
+pred[pred <= 0.5] <- 0
+pred[pred > 0.5] <- 1
+head(pred)
+```
+
+```{r}
+#예측과 실제 데이터의 맞는 데이터의 평균 및 테이블
+mean(pred == y) #79% 예측력 갖고 있음
+table(pred, y)
+```

@@ -1,0 +1,20 @@
+```{r}
+readRDS('Data/randomForest_iris.rds')
+```
+
+```{r}
+dementia <- read.csv('./Data/dementiaHH.csv', header=T)
+dementia
+```
+
+```{r}
+dementiaAll <- read.csv('./Data/dementia_all.csv', header = T)
+```
+
+```{r}
+dementiaAll
+```
+
+```{r}
+readRDS('Data/randomRegres1_dementia.rds')
+```

@@ -1,0 +1,87 @@
+# 기초 통계량
+
+-임상실험(제약회사)
+
+```{r}
+# 밀가루
+flour <- c(3, -2, -1, 0, 1, -2)
+
+#다이어트약
+diet <- c(-4, 1, -3, -5, -2, -8)
+
+```
+
+```{r}
+total <- c(flour, diet)
+total
+# 정렬 하면 안됨!!!
+```
+
+```{r}
+summary(total)
+```
+
+```{r}
+hist(total)
+```
+
+\*상관계수: 순서에 예민, 밀가루와 다이어트 약이 상관계수가 맞으면 효과 없는 것!
+
+```{r}
+boxplot(flour, diet)
+```
+
+```{r}
+cor(flour, diet)
+#-0.01708051  >>  상관이 없으므로 다이어트 약 효과 있음
+```
+
+# 기초 통계량 산출
+
+```{r}
+cafe <- read.csv("./Data/coffee.csv")
+cafe
+```
+
+### 각자 빈도수
+
+```{r}
+table(cafe$Coffee)
+```
+
+### 범위 빈도수
+
+```{r}
+coffee_range <- seq(0,60,10)
+table(cut(cafe$Coffee, breaks = coffee_range, right = F))#40-49, 50-59
+```
+
+### 줄기잎 그래프
+
+```{r}
+stem(cafe$Coffee)
+#10단위씩 보여주기, 몇개 팔렸는 지?
+```
+
+### 변동계수
+
+```{r}
+#apply(df[, 1:2], 2, sd)
+sd(cafe$Coffee)/mean(cafe$Coffee)#변동이 적은 것을 팔아야 된다.
+sd(cafe$Fruit.Cup)/mean(cafe$Fruit.Cup)
+```
+
+```{r}
+# 0- 안팔림 
+sort(cafe$Fruit.Cup)
+```
+
+```{r}
+#안 팔린 날 없음
+sort(cafe$Coffee)
+```
+
+```{r}
+boxplot(cafe$Coffee, cafe$Fruit.Cup)
+#모양이 균일하게 분포되어 있으면 꾸준히 잘 팔리는 제품
+```

@@ -1,0 +1,284 @@
+# 회귀분석
+
+단순회귀 분석과 다중 회귀 분석
+
+정규분포만 써야됨
+
+```{r}
+regression <- read.csv("./Data/regression.csv")
+head(regression)
+```
+
+```{r}
+str(regression)
+```
+
+```{r}
+summary(regression$Height)
+summary(regression$Weight)
+```
+
+```{r}
+plot(regression$Height, regression$Weight)
+```
+
+상관계수
+
+```{r}
+cor(regression$Height, regression$Weight)
+```
+
+```{r}
+#tilt
+#회기선 (중심선, 평균선)
+plot(regression$Weight ~ regression$Height)
+
+#회귀식 : lm(종속변수~독립변수)
+r <- lm(regression$Weight ~ regression$Height)
+abline(r, col = 'red')
+```
+
+분석 결과
+
+```{r}
+summary(r)
+```
+
+p-value: \< 2.2e-16 \< 0.05
+
+Adjusted R-squared: 0.9333 \<--- 예측력 93%
+
+Residual standard error: 6.355 \<\--표준오차
+
+coefficients - intercept \>\>\*가 없으면 쓸 수 없다., \*가 세개 있어야 쓸 수 있다.
+
+```{r}
+#공식
+r
+```
+
+y =ax + b
+
+몸무게 = 0.6147\*키 + (-40.8659)
+
+키가 170cm인 사람의 몸무게를 예측
+
+```{r}
+0.6147 * 170 + (-40.8659)
+
+# 표준오차를 적용한 키가 170인 사람의 몸무게 (+-표준오차)
+paste(0.6147 * 170 + (-40.8659) - 6.355, "~", 0.6147 * 170 + (-40.8659) + 6.355)
+```
+
+# IQ
+
+```{r}
+iq <- read.csv('./Data/IQ.csv')
+head(iq)
+```
+
+```{r}
+str(iq)
+```
+
+## (1) IQ가 126인 사람의 성적을 예측해 보세요.
+
+```{r}
+cor(iq$다니는.학원수, iq$성적)
+cor(iq$TV시청.시간, iq$성적)
+cor(iq$게임하는.시간, iq$성적)
+cor(iq$IQ, iq$성적)
+```
+
+```{r}
+plot(iq$IQ, iq$성적)
+
+r1 <- lm(iq$성적 ~ iq$IQ)
+abline(r1, col='red')
+```
+
+```{r}
+summary(r1)
+```
+
+예측력: 80.71%
+
+표준 오차: 3.322
+
+p-value: 0.0002547 \< 0.05
+
+```{r}
+r1
+```
+
+```{r}
+paste((0.6714*126 + (-5.2918)) - 3.322, "~", (0.6714*126 + (-5.2918)) + 3.322)
+```
+
+## (2) 성적과 가장 관련이 깊은 항목은?
+
+```{r}
+cor(iq$다니는.학원수, iq$성적)
+cor(iq$TV시청.시간, iq$성적)
+cor(iq$게임하는.시간, iq$성적)
+cor(iq$IQ, iq$성적)
+```
+
+```{r}
+plot(iq$다니는.학원수, iq$성적)
+
+r2 <- lm(iq$성적 ~ iq$다니는.학원수)
+abline(r2, col='red')
+```
+
+```{r}
+summary(r2)
+```
+
+```{r}
+r2
+```
+
+```{r}
+iq
+iq[, -1]
+```
+
+```{r}
+#숫자로만 상관계수 분석해야 되므로 문자 칼럼 지우기 
+a <- cor(iq[, -1])
+```
+
+\>\>a 표 보기
+
+## (3) 학원을 몇군데 다녀야 90점이 될까?
+
+```{r}
+iq
+plot(iq$다니는.학원수, iq$성적)
+
+r2 <- lm(iq$성적 ~ iq$다니는.학원수)
+abline(r2, col='red')
+```
+
+```{r}
+summary(r2)
+```
+
+```{r}
+r2
+```
+
+학원: y \>\> 알고싶은 것이 종속변수
+
+# 다중 회귀 분석
+
+여러개의 항목들로 구성된 식으로 예측하는 방법
+
+```{r}
+data('attitude')
+help(attitude)
+```
+
+```{r}
+head(attitude)
+```
+
+```{r}
+str(attitude)
+```
+
+```{r}
+plot(attitude)
+```
+
+rating과 가장 관련이 깊은 것은 complaints
+
+### rating을 제외한 변수들이 rating에 어떤 영향을 미치는지 회귀분석으로 분석
+
+```{r}
+#.의 의미: rating 제외 전부
+model <- lm(rating~ ., data=attitude)
+model
+```
+
+```{r}
+summary(model)
+```
+
+66.28 예측력은 전부 해당했을 때의 예측력
+
+```{r}
+cor(attitude)
+```
+
+예측력을 향상
+
+```{r}
+reduced <- step(model, direction = 'backward')
+```
+
+아래로 내려갈수록 예측력이 높은 데이터만으로 분석됨
+
+```{r}
+summary(reduced)
+```
+
+\>\>complaints 만으로도 분석 가능하다. \*이 세개 있으므로
+
+```{r}
+reduced
+```
+
+# iris에 대한 다중회귀분석
+
+```{r}
+str(iris)
+```
+
+```{r}
+iris12 <- iris
+iris12$Species <- as.numeric(iris$Species)
+```
+
+```{r}
+plot(iris12)
+```
+
+```{r}
+head(iris12)
+```
+
+```{r}
+model1 <- lm(Species ~ ., data=iris12)
+model1
+```
+
+```{r}
+summary(model1)
+```
+
+```{r}
+cor(iris12)
+```
+
+```{r}
+reduced12 <- step(model1, direction = 'backward')
+```
+
+```{r}
+summary(reduced12)
+```
+
+```{r}
+reduced12
+```
+
+```{r}
+head(iris12)
+```
+
+```{r}
+5.1*(-0.1362)+1.4*0.2521+0.2*0.5869+1.14469+0.2187
+4.9*(-0.1362)+1.4*0.2521+0.2*0.5869+1.14469+0.2187
+```

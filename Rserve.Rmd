@@ -1,0 +1,11 @@
+# Rserve
+
+```{r}
+library(Rserve)
+Rserve(FALSE, port=6311, args = '--RS-encoding utf8 --no-save')
+#6311은 Rserve 에 정해진 포트 번호 (ex. http port 번호: 8080과 같다.)
+```
+
+```{r}
+help(Rserve)
+```

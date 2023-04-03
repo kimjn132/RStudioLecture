@@ -1,0 +1,589 @@
+# Dementia 정제
+
+## 데이터 불러오기
+
+```{r}
+dementia <- read.csv('./Data/alzheimer.csv', header=T)
+dementia
+```
+
+### 데이터 전체 확인
+
+```{r}
+str(dementia)
+```
+
+> 결측치(na), 빈칸 , 데이터타입 확인
+
+### \<컬럼 이름 설명\>
+
+Group: Converted / Demented / Nondemented (경도 / 치매 / 치매 아님)
+
+M.F: 성별
+
+Age: 나이
+
+EDUC: 교육 수준
+
+SES: 경제 수준 1(high) \~ 5(low)
+
+MMSE: Mini-Mental State Examination Score (0= worst, to 30 = best)
+
+CDR: Clinical Dementia Rating (0 = no dementia, 0.5 = very mild AD, 1 = mild AD, 2 = moderate AD)
+
+eTIV(estimate Total Intracranial volume): 뇌크기
+
+nWBV(Normalized whole-brain volume): 대뇌 크기
+
+ASF: Atlas scaling factor
+
+### 결측치 확인
+
+```{r}
+library(stringr)
+```
+
+```{r}
+sum(is.na(dementia))
+```
+
+> 결측치 2개 찾음! 어떤 컬럼에 결측치가 있는지 알아야 됨
+
+```{r}
+colSums(is.na(dementia))
+```
+
+> MMSE 에 2개 있다.
+
+```{r}
+dementia1 <- subset(dementia, !is.na(dementia$MMSE))
+```
+
+```{r}
+str(dementia1)
+```
+
+> SES 에 "" 비어있는 데이터와 "QR" 데이터 삭제!
+
+```{r}
+table(dementia1$SES)
+```
+
+### SES 컬럼 정제
+
+```{r}
+subset(dementia1, dementia1$SES == '')
+subset(dementia1, dementia1$SES == 'Qh')
+```
+
+SES 에 비어있는 데이터와 Qh 데이터를 다른 숫자로 치환할 수 없으므로 삭제하기
+
+```{r}
+dementia1 <- subset(dementia1, !dementia1$SES == '')
+dementia1 <- subset(dementia1, !dementia1$SES == 'Qh')
+```
+
+```{r}
+str(dementia1)
+```
+
+### Group은 예측할 때 필요 없음(왜냐하면 CDR이미 치매 정도를 측정하고 있다.)
+
+```{r}
+dementia1 <- dementia1[,-1]
+```
+
+```{r}
+str(dementia1)
+```
+
+### M.F(성별) 0, 1로 바꾸기(새로운 칼럼 만들어서 사용)
+
+```{r}
+dementia1$SexCode[dementia1$M.F == 'F'] <- 0
+dementia1$SexCode[dementia1$M.F == 'M'] <- 1
+```
+
+### M.F 삭제
+
+```{r}
+dementia1 <- dementia1[,-1]
+```
+
+### SES 숫자로 바꾸기
+
+```{r}
+dementia1$SES <- as.numeric(dementia1$SES)
+```
+
+```{r}
+str(dementia1)
+```
+
+### CDR 1, 2 factor 합치기
+
+```{r}
+library(stringr)
+```
+
+```{r}
+dementia1$CDR <- str_replace(dementia1$CDR, '2', '1')
+```
+
+### CDR factor로 바꾸기
+
+```{r}
+as.factor(dementia1$CDR)
+```
+
+```{r}
+dementia1$CDR <- as.factor(dementia1$CDR)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+#write.csv(dementia1, "./Data/dementia1.csv", row.names = F)
+```
+
+### 의사결정나무
+
+```{r}
+library(party)
+```
+
+```{r}
+library(caret)
+```
+
+```{r}
+
+#species 중 70퍼센트
+samp <- createDataPartition(dementia1$CDR, p=0.7, list = F)
+```
+
+```{r}
+data.train <- dementia1[samp,]
+data.test <- dementia1[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+```{r}
+dementia1
+```
+
+```{r}
+dementia_tree <- ctree(CDR ~ Age+EDUC+SES+MMSE+SexCode, data=data.train)
+```
+
+```{r}
+pred <- predict(dementia_tree, x)
+pred
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> 의사결정나무 : 75.23%
+
+### randomforest
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(dementia1$CDR, p=0.7, list = F)
+data.train <- dementia1[samp,]
+data.test <- dementia1[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+SexCode, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> Randomforest : 82.85%
+
+```{r}
+nrow(dementia1)
+```
+
+```{r}
+saveRDS(rf,'./Data/random_dementia.rds')
+```
+
+## 인공신경망
+
+```{r}
+boxplot(dementia1$eTIV)
+```
+
+```{r}
+str(dementia1)
+```
+
+```{r}
+
+samp <- c(sample(1:117, 82), sample(118:234, 82), sample(235:353, 82))
+samp
+```
+
+```{r}
+data.train <- dementia1[samp, ]
+data.train
+```
+
+```{r}
+data.test <- dementia1[-samp,]
+data.test
+```
+
+```{r}
+summary(data.train)
+summary(data.test)
+```
+
+```{r}
+library(nnet)
+```
+
+```{r}
+model.nnet <- nnet(CDR ~ Age+MMSE+SES+EDUC+SexCode, data = data.train, size=3) # size: 은닉층 개수
+```
+
+```{r}
+model.nnet
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+x
+```
+
+```{r}
+y <- data.test$CDR
+y
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+```{r}
+mean(pred == y)*100
+```
+
+```{r}
+table(pred, y)
+```
+
+> 인공신경망 : 55.14 \>\> 74.76%(eTIV 외 뇌 용량 크기 관련 제외)
+>
+> 최대 80.37%
+
+## SVM
+
+```{r}
+library(e1071)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(dementia1$CDR, p=0.7, list=F)
+data.train <- dementia1[samp,]
+data.test <- dementia1[-samp,]
+```
+
+```{r}
+x <- subset(data.test, select=-CDR)
+y <- data.test$CDR
+```
+
+```{r}
+x
+y
+```
+
+```{r}
+model <- svm(CDR ~ Age+EDUC+SES+MMSE+SexCode, data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> svm : 74.28%
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+arrange(dementia1, dementia1$Age)
+```
+
+# randomforest without eTIV
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(dementia1$CDR, p=0.7, list = F)
+data.train <- dementia1[samp,]
+data.test <- dementia1[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+dementia1
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+eTIV+SexCode, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+> eTIV가 없으면 error percent: 25.81%\~27%
+>
+> eTIV가 있으면 error percent: 22.98%\~25%
+>
+> \>대뇌 크기 및 용량을 사용자에게 물어보기는 힘들다..
+
+```{r}
+arrange(dementia1, dementia1$EDUC)
+
+```
+
+```{r}
+head(arrange(dementia1, dementia1$SES))
+tail(arrange(dementia1, dementia1$SES))
+```
+
+## 데이터 불러오기
+
+```{r}
+dementiaFinal <- read.csv('./Data/dementia_all.csv', header=T)
+```
+
+```{r}
+normal <- nrow(subset(dementiaFinal, dementiaFinal$CDR==0.0))
+unnormal <- nrow(subset(dementiaFinal, dementiaFinal$CDR==0.5))
+nrow(subset(dementiaFinal, dementiaFinal$CDR==1.0))
+```
+
+```{r}
+a <- sort(sample(normal, 62))
+b <- sort(sample(unnormal, 62))
+```
+
+```{r}
+nn <- subset(dementiaFinal, dementiaFinal$CDR==0.0)
+pp <- subset(dementiaFinal, dementiaFinal$CDR==0.5)
+```
+
+```{r}
+hh <- rbind(nn[a,],pp[b,], subset(dementiaFinal, dementiaFinal$CDR==1.0))
+```
+
+```{r}
+str(hh)
+```
+
+### random
+
+```{r}
+library(caret)
+samp <- createDataPartition(hh$CDR, p=0.7, list = F)
+data.train <- hh[samp,]
+data.test <- hh[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+SexCode, data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### random (class)
+
+```{r}
+hh$CDR <- factor(hh$CDR)
+```
+
+```{r}
+hh
+```
+
+```{r}
+#write.csv(hh, "./Data/dementiaHH.csv", row.names = F)
+```
+
+```{r}
+library(caret)
+samp <- createDataPartition(hh$CDR, p=0.7, list = F)
+data.train <- hh[samp,]
+data.test <- hh[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+SexCode, data = data.train, ntree = 100, type = 'vote')
+rf
+```
+
+> 예측 주관식 버전
+
+```{r}
+pred <- predict(rf, x, type = 'vote')
+pred
+```
+
+```{r}
+mean(pred == y)
+```
+
+```{r}
+summary(pred)
+```
+
+```{r}
+#saveRDS(rf,'./Data/randomRegres3_dementia.rds')
+```
+
+```{r}
+help(predict)
+```
+
+```{r}
+subset(hh, hh$CDR==0.5)
+subset(hh, hh$CDR==1)
+```
+
+```{r}
+hh$CDR <- str_replace(hh$CDR, '0.5', '1')
+```
+
+```{r}
+subset(hh, hh$CDR=='0')
+subset(hh, hh$CDR=='1')
+```
+
+```{r}
+hh$CDR <- as.numeric(hh$CDR)
+```
+
+```{r}
+str(hh)
+```
+
+```{r}
+library(randomForest)
+library(caret)
+samp <- createDataPartition(hh$CDR, p=0.7, list = F)
+data.train <- hh[samp,]
+data.test <- hh[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -CDR)
+y <- data.test$CDR
+```
+
+```{r}
+rf <- randomForest(CDR ~ Age+EDUC+SES+MMSE+SexCode, data = data.train, ntree = 100, type = 'vote')
+```
+
+```{r}
+pred <- predict(rf, x)
+pred
+```
+
+```{r}
+mean(pred == y)
+```
+
+```{r}
+rf
+```
+
+```{r}
+saveRDS(rf,'./Data/randomRegres4_dementia.rds')
+```
+
+```{r}
+pred
+```

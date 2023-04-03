@@ -1,0 +1,206 @@
+# Mushroom을 One-Hot Encoding으로 Machine Learning 사용하기
+
+```{r}
+mr <- read.csv('./Data/mushroom.csv', header=F)
+head(mr)
+```
+
+target \<- [feature: 데이터]
+
+```{r}
+for(i in 1:23){
+  #factor
+  mr[,i] <- as.factor(mr[,i])
+}
+head(mr)
+```
+
+```{r}
+for(i in 2:23){
+  mr[,i] <- as.numeric(mr[,i])
+}
+head(mr)
+```
+
+# One-hot Encoding
+
+### 각 컬럼별 Data 확인
+
+```{r}
+for(i in 2:23){
+  cat('column name:', colnames(mr)[i])
+  print(table(mr[,i]))
+  cat('--------------------------\n')
+}
+```
+
+### 작업 수행 후의 컬럼 개수 파악
+
+```{r}
+num <- c()
+for(i in 2:23){
+  num = append(num, length(unique(mr[,i])))
+}
+sum(num)
+```
+
+### 별도의 DataFrame 생성
+
+```{r}
+mr2 <- data.frame(V1=mr$V1)
+head(mr2)
+```
+
+```{r}
+sort(unique(mr$V2))
+```
+
+```{r}
+for(i in 2:23){
+  for (j in sort(unique(mr[,i]))) {
+    mr2 = cbind(mr2, mr[,i] == j)
+  }
+}
+mr2
+```
+
+```{r}
+ncol(mr2)
+```
+
+```{r}
+str(mr2)
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+mr2 <- arrange(mr2, V1)
+head(mr2)
+```
+
+> 정렬을 하려고 하면 컬럼 이름때문에 Error가 발생(mr[, i] == j) 이렇게 되어있음#
+>
+> \>컬럼 이름 바꾸기
+
+```{r}
+colnames(mr2) <- paste('V', 1:118, sep="")
+head(mr2)
+```
+
+```{r}
+str(mr2)
+```
+
+## Column이름과 One-Hot Encoding 한번에 처리하기
+
+```{r}
+mr3 <- data.frame(V1 = mr$V1)
+head(mr3)
+mr3
+```
+
+```{r}
+mr
+```
+
+```{r}
+count = 2
+for(i in 2:23){
+  for(j in sort(unique(mr[,i]))){
+    mr3 = cbind(mr3, mr[,i] == j)
+    colnames(mr3)[count] <- paste('V',i,'_',j,sep = '')
+    count = count+1
+  }
+}
+head(mr3)
+```
+
+```{r}
+str(mr3)
+```
+
+```{r}
+mr3 <- arrange(mr3, V1)
+head(mr3)
+```
+
+### randomforest
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(mr3$V1, p=0.7, list = F)
+data.train <- mr3[samp,]
+data.test <- mr3[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -V1)
+y <- data.test$V1
+```
+
+```{r}
+rf <- randomForest(V1 ~ ., data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```
+
+### 인공신경망
+
+```{r}
+library(nnet)
+```
+
+```{r}
+model.nnet <- nnet(V1 ~ ., data = data.train, size=3) # size: 은닉층 개수
+```
+
+```{r}
+pred <- predict(model.nnet, x, type = 'class')
+head(pred)
+```
+
+```{r}
+mean(pred == y)*100
+```
+
+```{r}
+table(pred, y)
+```
+
+### SVM
+
+```{r}
+library(e1071)
+```
+
+```{r}
+model <- svm(V1 ~ ., data = data.train)
+```
+
+```{r}
+pred <- predict(model, x)
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```

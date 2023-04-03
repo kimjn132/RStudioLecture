@@ -1,0 +1,132 @@
+```{r}
+food <- read.csv('./Data/food.csv', header=T)
+head(food)
+```
+
+```{r}
+foody <- read.csv('./Data/foody.csv', header=T)
+foody
+```
+
+```{r}
+foody <- foody[,-c(2,4,6)]
+```
+
+```{r}
+foody <- foody[,-c(5:7)]
+foody
+```
+
+```{r}
+for(i in 2:4){
+  #factor
+  foody[,i] <- as.factor(foody[,i])
+}
+foody
+```
+
+```{r}
+for(i in 2:4){
+  cat('column name:', colnames(foody)[i])
+  print(table(foody[,i]))
+  cat('--------------------------\n')
+}
+```
+
+```{r}
+num <- c()
+for(i in 2:4){
+  num = append(num, length(unique(foody[,i])))
+}
+sum(num)
+```
+
+```{r}
+foody2 <- data.frame(category=foody$식품상세분류)
+foody2
+```
+
+```{r}
+for(i in 2:4){
+  for (j in sort(unique(foody[,i]))) {
+    foody2 = cbind(foody2, foody[,i] == j)
+  }
+}
+foody2
+```
+
+```{r}
+ncol(foody2)
+```
+
+```{r}
+str(foody2)
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+foody2 <- arrange(foody2, category)
+foody2
+```
+
+```{r}
+colnames(foody2) <- paste('C', 1:16, sep="")
+foody2
+```
+
+```{r}
+str(foody2)
+```
+
+```{r}
+foody3 <- data.frame(C1 = foody$식품상세분류)
+head(foody3)
+foody3
+```
+
+```{r}
+library(randomForest)
+```
+
+```{r}
+foody2$C1
+```
+
+```{r}
+set.seed(1234)
+library(caret)
+samp <- createDataPartition(foody2$C1, p=0.7, list = F)
+data.train <- foody2[samp,]
+data.test <- foody2[-samp,]
+samp
+data.train
+data.test
+```
+
+```{r}
+x <- subset(data.test, select = -C1)
+y <- data.test$C1
+```
+
+```{r}
+x
+y
+```
+
+```{r}
+rf <- randomForest(C1 ~ ., data = data.train, ntree = 100)
+rf
+```
+
+```{r}
+pred <- predict(rf, x)
+pred
+```
+
+```{r}
+mean(pred == y)
+table(pred, y)
+```

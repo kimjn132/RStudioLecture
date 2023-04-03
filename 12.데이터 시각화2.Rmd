@@ -1,0 +1,401 @@
+# 데이터 시각화 2
+
+-통계
+
+-회귀분석
+
+-머신러닝: 파이썬
+
+### 선굵기 변경하기
+
+```{r}
+x <- c(1,3,5,2,9,10)
+plot(x,
+     #데이터 위치, 추세 알 수 있는 타입 그래프
+     type = 'b',
+     col = c(rep('black', 5), 'red'),
+     #선 라인 굵기 , rep으로 일부분만 굵게 하기 1~, 숫자가 올라갈수록 굵다.)
+     lwd = c(rep('1', 5),'3')
+     
+     )
+```
+
+# 한 화면에 차트 여러개 그리기
+
+```{r}
+price <- runif(10, 1, 100)
+plot(price)
+```
+
+```{r}
+#여러 개 차트, 다양한 구성으로 한 번에 보기
+#par(mfrow = c(1,4))
+par(mfrow = c(2,2))
+plot(price, type='l')
+plot(price, type='o')
+plot(price, type='h')
+plot(price, type='s')
+```
+
+### pch 속성으로 그리기
+
+```{r}
+#어떻게 보이면 효과적일 지 판단할 때 유용하다.(비교하며 볼 수 있어서)
+par(mfrow = c(2,2))
+plot(price, type = 'o', pch = 5)
+plot(price, type = 'o', pch = 15)
+plot(price, type = 'o', pch = 20, col = 'blue')
+plot(price, type = 'o', pch = c(rep(20, 8), 15, 15),
+                      , col = 'orange',
+                      #그래프 한 부분 강조
+                      , cex = c(rep(1,8),3,1)
+     )
+```
+
+### 중첩 자료 시각화
+
+```{r}
+x <- c(1,2,3,4,2,4)
+y <- rep(2, 6)
+plot(x, y)
+```
+
+```{r}
+table(x,y)
+```
+
+Method #1
+
+```{r}
+xy.df <- as.data.frame(table(x, y))
+xy.df#Freq(빈도수까지 자동으로 알려준다.)
+plot(x, y,
+     pch = 15,
+     #중복된 데이터 강조 Frq: (1,2,1,2)
+     cex = 2 * xy.df$Freq
+     )
+```
+
+Method #2
+
+```{r}
+x <- c(1,1,1,2,2,2,2,2,2,3,3,4,5,6)
+y <- c(1,1,4,2,3,2,2,2,3,2,1,1,1,1)
+zz <- data.frame(x,y)
+zz
+# 중복된 데이터 보여주기(산포도는 전체적 데이터의 분포를 보여주지만, 중복된 데이터를 표현하는 데 어려움이 있다는 단점이 있다. 그것을 보완해주는 것이 sunflowerplot이다.) 
+sunflowerplot(zz)
+```
+
+\*깨알지식: 차트 모양 대부분 나이팅게일이 만들었다. 전쟁 중 환자 수나 데이터를 손쉽게 보여주기 위해
+
+### sunflowerplot으로 iris의 sepal.length와 sepal.width의 산포도 그리기
+
+```{r}
+tt <- data.frame(iris$Sepal.Length, iris$Sepal.Width)
+sunflowerplot(tt)
+```
+
+## chart 2개를 겹쳐서 출력하기
+
+```{r}
+x <- 1:10
+mycol <- rgb(0,0,1,seq(0,1,0.1)) #투명도 그라데이션
+        #col = rgb(0,0,1, 0.5)  #0-red, 0-green, 1-blue, 0-투명도
+
+dotchart(x,
+         col = 'red'
+         )
+
+par(new=T)  #두 그래프 사이에 있어야 한다.
+
+barplot(x,
+        col = mycol
+        )
+
+```
+
+# 상자 수염 그래프
+
+-이상치 확인(weird check)
+
+```{r}
+abc <- c(110, 300, 150, 280, 310)
+boxplot(abc,
+        col = 'yellow',
+        horizontal = T
+        )
+#아래부터 summary(min, 1st, 3rd, max)
+#굵은 선은 중앙값
+summary(abc)
+```
+
+```{r}
+def <- c(1,1,1,1,1,2,5)
+summary(def)
+```
+
+```{r}
+# 동그라미 모양이 이상치다. -> 사용 안하는 데이터
+# 결측치와 이상치는 제거하고 정제 해야 한다.
+boxplot(def)
+```
+
+### 자동차의 제동거리
+
+```{r}
+head(cars)
+```
+
+```{r}
+str(cars)
+```
+
+분포(분석 가능성 확인)
+
+```{r}
+plot(cars$speed, cars$dist)
+```
+
+빈도수
+
+```{r}
+hist(cars$dist)
+```
+
+```{r}
+boxplot(cars$dist)
+```
+
+\*이상치를 지우게 되더라도 이상치가 있었다는 증거가 있으면 데이터 조작이 아님
+
+\*이상치를 판단하는 기준은 boxplot에 동그라미다.
+
+\*60% 정도가 정상적인 데이터가 있어야 된다.(이상치와 결측치의 합이 40% 넘어가면 쓸 수 없는 데이터다.)
+
+# 차트 디자인
+
+\*코드로 정직하게 정직하게 디자인하기(포토샵이나 다른 툴 들어가면 사기..!!, 통계 툴만 사용해야 된다.)
+
+```{r}
+par(family='AppleGothic')
+
+x <- c( 1, 3 , 6  ,8 , 9)
+y <- c(12, 56, 78, 32, 9)
+plot(x, y)
+
+# (3,3)과 (4,4)를 연결하는 선분(시작과 끝이 있는 선, 화살표 없음) 그리기
+segments(6,78, 8,32, col='red')
+
+# 화살표 그리기
+arrows(3,56, 1,12, col='blue')
+arrows(5,10, 7,70)
+
+# 글자쓰기
+text(4,40, 'This is a 샘플', srt=50)#좌표 중앙에 나온다.str(선, 막대 모양에 맞춰서 셋팅)
+
+# 테두리 활용하기 
+mtext('Character', side = 4, adj=0)#adj-위치 (0-bottom, 0.5-middle, 1-top)
+
+# 테두리 그리기
+box(lty = 1, col='red')
+
+# 사각형 그리기 
+rect(4,20, 6,30, density = 10, col='red') 
+                        #bottom-left, top-right 기준으로, density= how much fill
+
+# x축 추가, y축의 40 위치에 0~10까지 표시하고 색은 빨간색 
+axis(1, pos = 40, at = 0:10, col = 'red')
+
+# y축 추가, x축의 6위치에 20~60까지 표시하고 색은 파란색
+axis(2, pos = 6, at = 20:60, col='blue')
+
+```
+
+선분(segment)
+
+![](images/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7%202022-12-07%20%EC%98%A4%EC%A0%84%2011.31.18.png)
+
+## 투표수가 높은 시군구의 후보별 득표수의 막대그래프에 시군구별 투표수 표시하기
+
+### 10.대선자료 시각화_20.Rmd-투표수가 가장 많은 4지역의 후보별 득표수 차이 참조
+
+```{r}
+election <- read.csv('./Data/election_2022_job.csv')
+election
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+library(plotrix)
+```
+
+```{r}
+election
+top_five <- head(arrange(election, desc(투표수)), 5)
+top_five
+top_five_all <- arrange(aggregate(cbind(투표수, 이재명, 윤석열, 심상정)~시군구, top_five, sum), -투표수)
+top_five_data <- arrange(aggregate(cbind(투표수, 이재명, 윤석열, 심상정)~시군구, top_five, sum), -투표수)[, 3:5]
+top_five_all
+class(top_five_data)
+
+#data.frame을 t로 뒤집어주면 matrix로 바뀐다.
+#
+top_five_data1 <- t(top_five_data)
+colnames(top_five_data1) <- paste(top_five$광역시도, top_five$시군구)
+top_five_data1
+```
+
+### 각 그래프 상단에 붙일 총 데이터 숫자
+
+```{r}
+# 무식한 방법 
+toptext <- as.data.frame(top_five_data1)
+numOne <- sum(toptext$`경기도 화성시`)
+numTwo <- sum(toptext$`경기도 부천시`)
+numThree <- sum(toptext$`경기도 남양주시`)
+numFour <- sum(toptext$`서울특별시 송파구`)
+numFive <- sum(toptext$`서울특별시 강서구`)
+numFive
+```
+
+```{r}
+name <- paste(top_five$광역시도, top_five_all$시군구)
+name
+```
+
+```{r}
+toptext
+```
+
+```{r}
+par(family='AppleGothic')
+barplot(top_five_data1,
+        ylim=c(0,650000),
+        col = c('skyblue', 'red', 'yellow'),
+        #names = name,
+        cex.names = 0.5,
+        cex.axis = 0.5,
+        legend.text = T,
+        
+        )
+
+# 글자쓰기
+#text(0.7, numOne+20000, numOne)#좌표 중앙에 나온다.str(선, 막대 모양에 맞춰서 셋팅)
+#text(1.9, numTwo+20000, numTwo)
+#text(3.1, numThree+20000, numThree)
+#text(4.3, numFour+20000, numFour)
+#text(5.5, numFive+20000, numFive)
+
+# smart한 방법 
+data <- c()
+line <- 0.7
+#text(line, data+20000, data)
+
+for (i in 1:ncol(toptext)) {
+  data <- sum(toptext[,i])
+  text(line, data+20000, data)
+  line = line+1.2
+}
+
+data2 <- c()
+line2 <- 0.7
+y <- c()
+
+for(i in 1:ncol(toptext)){
+    for(j in 1:nrow(toptext)){
+    data2 <- paste(round(toptext[j,i]/sum(toptext[,i])*100,2), "%")
+    y <- rbind(toptext[0:(j-1), i], toptext[j,i]/2)
+    text(line2, sum(y), data2, cex=0.5)
+    }
+  #y <- c()
+  line2=line2+1.2
+}
+#text(0.7, sum(toptext[1,1])*1/2, round(toptext[1,1]/sum(toptext[,1])*100, 2))
+#text(0.7, sum(toptext[1,1])+sum(toptext[2,1])*1/2, round(toptext[2,1]/sum(toptext[,1])*100, 2))
+#text(0.7, sum(toptext[1,1])+sum(toptext[2,1])+sum(toptext[3,1])*1/2, round(toptext[3,1]/sum(toptext[,1])*100, 2))
+
+
+#sum(toptext[1,1])*1/2
+#sum(toptext[1,1])+sum(toptext[2,1])*1/2
+#sum(toptext[1,1])+sum(toptext[2,1])+sum(toptext[3,1])*1/2
+
+
+
+#bAccident3 <- cbind(bAccident3, bAccident11[,i])
+```
+
+```{r}
+toptext
+```
+
+```{r}
+#tlfgja
+toptext[1,1]/sum(toptext[,1])*100
+toptext[1,2]/sum(toptext[,1])*100
+toptext[1,3]/sum(toptext[,1])*100
+
+#text(0.7, toptext[1,1]/2, toptext[1,1]/sum(toptext[,1])*100)
+
+
+#text(0.7, sum(toptext[1,1])*1/3, round(toptext[2,1]/sum(toptext[,1])*100, 2))
+
+toptext[1,1]
+```
+
+# qplot()을 이용한 산점도
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+qplot(Sepal.Length, Petal.Length, 
+      data = iris, 
+      col=Species,
+      size=Petal.Width
+      )
+
+```
+
+# 수학 함수의 시각화
+
+y = x\^2
+
+```{r}
+f <- function(x){
+  y = x ^ 2
+  return(y)
+}
+```
+
+```{r}
+x <- 1:3
+f(x)
+```
+
+```{r}
+x <- seq(-5, 5, 0.1)
+plot(x, f(x),
+     type = 'l'
+     )
+```
+
+y=x\^2 + 2x + 3
+
+```{r}
+f1 <- function(x){
+  y = x^2 + 2*x + 3
+  return(y)
+}
+```
+
+```{r}
+x <- seq(-8,8,0.1)
+plot(x, f(x),
+     type = 'l'
+     )
+```

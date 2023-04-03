@@ -1,0 +1,193 @@
+# 인공신경망
+
+알파고: 인공신경망
+
+딥러닝: 인공신경망에도 쓰이는 방법 중 하나, 머신 러닝 안에 속함(머신러닝과 딥러닝은 함수식만 틀릴 뿐 같은 것)
+
+인공신경망의 개요
+
+\>개요
+
+1.  인공지능의 한 분야
+
+2.  인간 두뇌의 생물학적 작동 형태를 모방하여 컴퓨터로 하여금 지적인 능력을 갖추게 하는 방법론
+
+3.  공학 부분에서 시작되어 재무 관리 등에 도입되기 시작
+
+\>선형분류와 비선형 분류
+
+비선형 분류: 곡선
+
+딥러닝은 인공신경망에서만 된다.
+
+머신 러닝: 정형화된 데이터, Text 베이스 데이터, 회기식
+
+딥러닝: 비정형 데이터, 음악, 그림, 동영상 데이터
+
+인공신경망 구조: 은닉층(core), 은닝층 1개-인공신경망, 은닉층 여러개 쌓을 수 있는 것 - 딥러닝
+
+(함수) input \> 은닉층 \> output(return)
+
+학습결과의 예
+
+지도학습: 문제와 답 알려주고 공부시킴
+
+비지도학습: 문제만 주면 알아서 분류 하고 정답을 찾게 한다. 머신러닝에 잘 안씀-쓰게 된다면 카테고리(객관식)으로 쓴다.
+
+강화학습: 알아서 공부시킴, 시행착오 많음 ex) 로봇개, 마치 아기가 스스로 걷는 연습하듯이
+
+각자 학습 객관식, 주관식둘다 가능
+
+학습 방법
+
+학습 후 가중치, 가는 길의 빈도수가 얼마나 많은 지 가지고 함수 식 결정
+
+절편: bias
+
+```{r}
+head(iris)
+```
+
+학습용 데이터와 검증용 데이터 분리
+
+```{r}
+#rownames 만들기
+set.seed(1234)
+samp <- c(sample(1:50, 35), sample(51:100, 35), sample(101:150, 35))
+samp
+```
+
+```{r}
+iris
+```
+
+학습용 데이터 생성
+
+```{r}
+data.train <- iris[samp, ]
+data.train
+```
+
+검증용 데이터 생성
+
+```{r}
+data.test <- iris[-samp,]
+data.test
+```
+
+데이터 분류 확인하기
+
+```{r}
+summary(data.train)
+summary(data.test)
+```
+
+인공신경망으로 학습시키기
+
+```{r}
+library(nnet)
+```
+
+모델 만들기
+
+```{r}
+model.nnet <- nnet(Species ~ ., data = data.train, size=3) # size: 은닉층 개수
+# 은닉층 개수: 많을수록 정확해진다.
+```
+
+문제 및 정답 만들기
+
+문제
+
+```{r}
+x <- subset(data.test, select = -Species)
+head(x)
+```
+
+답안지
+
+```{r}
+y <- data.test$Species
+head(y)
+```
+
+검증 test
+
+```{r}
+#class(classification-객관식, raw-주관식)
+pred <- predict(model.nnet, x, type = 'class')
+pred
+```
+
+예측력 확인
+
+```{r}
+mean(pred == y)*100
+```
+
+정오표 확인(오답확인): 제일 중요!, 중복이 많으면 정답률이 떨어진다.
+
+```{r}
+table(pred, y)
+```
+
+사용가능하다고 판단되면 모든데이터를 기준으로 학습
+
+```{r}
+model.nnet <- nnet(Species~., data = iris, size=3)
+```
+
+Sepal.Length = 9.3,
+
+Sepal.Width = 2.2,
+
+Petal.Length = 7.5,
+
+Petal.Width = 3.5
+
+```{r}
+pred2 <- predict(model.nnet, list(Sepal.Length = 9.3,
+
+  Sepal.Width = 2.2,
+
+  Petal.Length = 7.5,
+
+  Petal.Width = 3.5
+
+  ), type = 'class')
+
+pred2
+```
+
+\>\>틀림 , summary를 보면 범위 밖의 정보로 예측했기 때문에 그냥 가장 높은 virginica로 찍어서 나옴, Sepal.Length=100이든 범위를 벗어나면 아무거나 나옴 (예측 불가)
+
+mean, max를 꼭 확인
+
+range 넘어가는 것은 회귀식으로 측정(신뢰도가 떨어짐), 머신러닝은 측정 불가
+
+```{r}
+summary(iris)
+```
+
+Sepal.Length = 5.3
+
+Sepal.Width = 3.3
+
+Petal.Length = 1.6
+
+Petal.Width = 0.3
+
+```{r}
+x1 <- data.frame(Sepal.Length = 5.3, Sepal.Width = 3.3, Petal.Length = 1.6, Petal.Width = 0.3)
+```
+
+x1: list로 만들어도 됨
+
+```{r}
+x1
+```
+
+```{r}
+pred1 <- predict(model.nnet, x1, type = 'class')
+pred1
+```
